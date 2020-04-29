@@ -1,0 +1,27 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+#define WIFI_SSID "PSU Registered Devices"
+#define WIFI_PASS ""
+
+#define SERVER_IP "35.247.56.47"
+#define SERVER_PORT 15000
+#define HOST_PORT 16000
+
+#define COLLECT_TIME 60000 //1 Minute = 60000 //5 Minutes = 300000 : 10 Minutes = 600000
+
+#define BUFFER_SIZE 1024
+
+#define UNIQUE_ID 1
+
+#define PIN_ECHO 5
+#define PIN_TRIG 17
+
+#define LED_R 16
+#define LED_G 17
+#define LED_B 21
+
+#define DEBUG
+#define Pilot true
+
+#endif
