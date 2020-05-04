@@ -1,4 +1,6 @@
 #include <WiFi.h>
+#include "AsyncUDP.h"
+AsyncUDP udp;
 
 #ifndef OFFLINE
 #include <WiFiUdp.h>
@@ -8,6 +10,8 @@
 #include "ultrasonic.h"
 
 ultrasonic ultra = ultrasonic(PIN_TRIG,PIN_ECHO);
+
+RTC_DATA_ATTR int bootCount = 0;
 
 boolean NETWORK_ACTIVE = 0;
 WiFiUDP socket;
@@ -27,31 +31,29 @@ void setup() {
     #else
       WiFi.begin(WIFI_SSID);
     #endif
-    
+ 
     socket.begin(SERVER_PORT);
+   
   #endif
   // END WIFI CONNECTION //
-
-  delay(1000); //Take some time to open up the Serial Monitor
+  
+  recievePackets();
 }
 
 void loop() {
   // START DATA SEND //
   if (WiFi.status() == WL_CONNECTED) {
-      #ifndef OFFLINE   //If NOT Offline Build
+      #ifndef OFFLINE   //If NOT Offline Build      
       sendPacket(ULTRASONIC_CID, ultra.get());
       
-      delay(TIME_TO_DELAY_SLEEP); 
+      ++bootCount;
       
-      esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); //Set unit wakeup time
-            
+      delay(TIME_TO_DELAY_SLEEP); 
       #ifdef DEBUG
+        Serial.println("Boot number: " + String(bootCount));
         Serial.println("Going to sleep now");
       #endif
-      
-      Serial.flush(); 
-      delay(100); 
-      
+      esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); //Set unit wakeup time
       esp_deep_sleep_start();    
     }else{
       Serial.flush(); 
@@ -95,6 +97,34 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
   socket.endPacket();
 }
 #endif
+
+void recievePackets(){
+  if (udp.listen(HOST_PORT)) {
+    udp.onPacket([](AsyncUDPPacket packet) {
+      
+      #ifdef DEBUG
+        Serial.print(" Recieved Data From: ");
+        Serial.print(packet.remoteIP());
+        Serial.print(":");
+        Serial.print(packet.remotePort());
+        Serial.print(", Data Content: ");
+        Serial.write(packet.data(), packet.length());
+        Serial.println();
+      #endif
+      
+      String UDPstring = (const char*)packet.data();
+      if (UDPstring == "SEND"){
+        sendPacket(ULTRASONIC_CID, ultra.get());
+        packet.printf("SUCCESS: DATA SENT FOR SENSOR: %lu", UNIQUE_ID);
+      }else if (UDPstring == "COUNT"){
+        packet.printf("SUCCESS: SENSOR: %lu, BOOTCOUNT IS: %lu", UNIQUE_ID, bootCount);
+      }else{
+        packet.printf("ERROR: SENSOR: %lu, [REQUEST FOLLOWING: SEND OR COUNT]", UNIQUE_ID);
+      }
+    });
+  }
+}
+
 
 /******Documentation*****
   WiFi                https://www.arduino.cc/en/Reference/WiFi
