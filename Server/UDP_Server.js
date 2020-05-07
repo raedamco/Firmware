@@ -25,8 +25,12 @@ server.on('error',function(error){
 
 // listen for packets
 server.on('message',function(msg, info) {
-    var SensorID = msg.readUInt32LE(0,1);
     var Time = new Date();
+    log("---------------------------------------------------------------------------------------------------------------------------------------------");
+    log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
+
+    var SensorID = msg.readUInt32LE(0,1);
+
 
     var Distance = ((((msg.readUInt32LE(5) * 0.000001) * 343)/2) * 39.37);
     var OccupiedDistance = 48; //Object is within 4 feet (48in)
@@ -45,42 +49,44 @@ server.on('message',function(msg, info) {
         var Occupant = "";
     }
 
-    var voltage = msg.readUInt32LE(7,8);
+    log("SENSOR ID: [" + SensorID + "] | SENSOR TYPE: [" + SensorType + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 
-    log("---------------------------------------------------------------");
-    log("Time: " + Time);
-    log("Sensor ID: " + SensorID);
-    log("Sensor Type: " + SensorType);
-    log("Occupied: " + Occupied);
-    log("Distance of: " + Distance);
-    log("Voltage of: " + voltage);
-    //
-    // appendData(String(SensorID), Occupied, Occupant, Time, Distance);
-    // queryDatabase();
-    // databaseListner();
+    appendData(String(SensorID), Occupied, Occupant, Time, Distance);
+    queryDatabase();
+    databaseListner();
 });
 
 function appendData(sensorID, state, occupant, time, distance) {
-    db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
-        ["Occupied"]: state,
-        ["Occpant"]: occupant,
-        ["Time"]: time,
-        ["Distance (in)"]: distance
-    }).then(ref => {
+    //Check if sensor exists in the database before adding data, ensures random data is not added.
+    db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
+        if (!doc.exists) {
+          log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
+        } else {
+            db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
+                ["Occupied"]: state,
+                ["Occpant"]: occupant,
+                ["Time"]: time,
+                ["Distance (in)"]: distance
+            }).then(ref => {
+            }).catch(err => {
+                log('Error getting documents', err);
+            });
+            updateDocumentInfo(sensorID, state, occupant);
+        }
     }).catch(err => {
-        log('Error getting documents', err);
+        log('Error getting document' + err);
     });
-    updateDocumentInfo(sensorID, state, occupant);
 }
 
 function updateDocumentInfo(sensorID, state, occupant){
     db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
-            db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).update({
-                "Occupancy.Occupied": state,
-                "Occupancy.Occupant": occupant,
-            }).catch(err => {
-                log('Error getting documents', err);
-            });
+        db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).update({
+            "Occupancy.Occupied": state,
+            "Occupancy.Occupant": occupant,
+        }).catch(err => {
+            log('Error getting documents', err);
+        });
+        log("DATABAES UPDATED FOR SENSOR ID: " + sensorID);
     }).catch(err => {
         log('Error getting document', err);
     });
@@ -89,9 +95,7 @@ function updateDocumentInfo(sensorID, state, occupant){
 //emits when socket is ready and listening for datagram msgs
 server.on('listening',function(){
   var address = server.address();
-  log('Server is listening at port: ' + address.port);
-  log('Server ip: ' + address.address);
-  log('Server is IP4/IP6: ' + address.family);
+  log("SERVER LISTENING ON PORT : " + address.port + " | SERVER IP: " + address.address + " | SERVER TYPE: " + address.family);
 });
 
 
@@ -101,8 +105,6 @@ server.on('close',function(){
 });
 
 server.bind(PORT);
-
-
 
 
 function queryDatabase(){
@@ -161,9 +163,6 @@ function updateStructureInfo(structure, available){
         log('Error getting documents', err);
     });
 }
-
-
-
 
 
 
