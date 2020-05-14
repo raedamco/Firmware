@@ -1,3 +1,11 @@
+//
+//  Arduino-ESP.ino
+//  Theory Parking
+//
+//  Created on 1/10/2019. Modified on 5/13/2020.
+//  Copyright © 2020 Theory Parking. All rights reserved.
+//
+
 #include <WiFi.h>
 #include "AsyncUDP.h"
 AsyncUDP udp;
@@ -48,13 +56,19 @@ void loop() {
       
       ++bootCount;
       
-      delay(TIME_TO_DELAY_SLEEP); 
+      delay(COLLECT_TIME); 
       #ifdef DEBUG
         Serial.println("Boot number: " + String(bootCount));
-        Serial.println("Going to sleep now");
       #endif
-      esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); //Set unit wakeup time
-      esp_deep_sleep_start();    
+      
+//      DEEP SLEEP CODE
+//      #ifdef DEBUG
+//        Serial.println("Boot number: " + String(bootCount));
+//        Serial.println("Going to sleep now");
+//      #endif
+//      esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); //Set unit wakeup time
+//      esp_deep_sleep_start();  
+  
     }else{
       Serial.flush(); 
     }
