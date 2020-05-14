@@ -55,29 +55,51 @@ server.on('message',function(msg, info) {
     queryDatabase();
     databaseListner();
 });
-
-function appendData(sensorID, state, occupant, time, distance) {
+// adds data entry for spot
+async function appendData(sensorID, state, occupant, time, distance) {
     //Check if sensor exists in the database before adding data, ensures random data is not added.
     db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
-        if (!doc.exists) {
+        if (!doc.exists) 
+        {
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
-        } else {
-            db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
-                ["Occupied"]: state,
-                ["Occpant"]: occupant,
-                ["Time"]: time,
-                ["Distance (in)"]: distance
-            }).then(ref => {
-            }).catch(err => {
-                log('Error getting documents', err);
-            });
-            updateDocumentInfo(sensorID, state, occupant);
+        } else 
+        {
+            var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(function(querySnapshot);
+            
+            if(old_data.data().Occupant == occupant && old_data.data().Occupied == state)// checks for change in status if not log added to current doc
+            {
+                
+                old_data.update({
+                    "Distance List": old_data.data()["Distance List"].push(old_data.data()["Distance (in)"]),
+                    "Distance (in)": distance,
+                    "Time.List": old_data.data()["Time"]["List"].push(old_data.data()["Time"]["End"]),
+                    "Time.End": time
+                }).catch(err => {
+                    log('Error getting documents', err);
+                });
+            }
+            else
+            {    
+                db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
+                    ["Occupied"]: state,
+                    ["Occupant"]: occupant,
+                    ["Time"]["End"]: time,
+                    ["Time"]["Start"]: time,
+                    ["Time"]["List"]: [time],
+                    ["Distance List"]: [distance],
+                    ["Distance (in)"]: distance
+                }).then(ref => {
+                }).catch(err => {
+                    log('Error getting documents', err);
+                });
+                updateDocumentInfo(sensorID, state, occupant);
+            }
         }
     }).catch(err => {
         log('Error getting document' + err);
     });
 }
-
+// udpdates spot info itself in database 
 function updateDocumentInfo(sensorID, state, occupant){
     db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
         db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).update({
