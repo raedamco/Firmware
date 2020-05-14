@@ -48,13 +48,19 @@ void loop() {
       
       ++bootCount;
       
-      delay(TIME_TO_DELAY_SLEEP); 
+      delay(COLLECT_TIME); 
       #ifdef DEBUG
         Serial.println("Boot number: " + String(bootCount));
-        Serial.println("Going to sleep now");
       #endif
-      esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); //Set unit wakeup time
-      esp_deep_sleep_start();    
+      
+//      DEEP SLEEP CODE
+//      #ifdef DEBUG
+//        Serial.println("Boot number: " + String(bootCount));
+//        Serial.println("Going to sleep now");
+//      #endif
+//      esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); //Set unit wakeup time
+//      esp_deep_sleep_start();  
+  
     }else{
       Serial.flush(); 
     }
