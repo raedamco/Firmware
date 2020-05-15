@@ -84,8 +84,8 @@ async function test_function(sensorID, state, occupant, time, distance)
               return querySnapshot;
           }).catch(funciton(error)
             {
-                log('Error getting documents', err);
-                First_one(sensorID, state, occupant, time, distance);
+                log('Error getting documents', err)
+                First_one(sensorID, state, occupant, time, distance)
             });
            // log("TEST old_data: "+ old_data.Occupied)
            // log("TEst 2: old_data"+ old_data["Occupied"])
