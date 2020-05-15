@@ -65,11 +65,16 @@ async function appendData(sensorID, state, occupant, time, distance) {
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
         } else 
         {
-            
-            var old_data =  db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot){return querySnapshot;});
+            test_function(sensorID, state, occupant, time, distance);
+        }
+}
+
+async function test_function(sensorID, state, occupant, time, distance)
+{
+          var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot){return querySnapshot;});
            // log("TEST old_data: "+ old_data.Occupied)
            // log("TEst 2: old_data"+ old_data["Occupied"])
-            log("OLD DATA" + old_data.doc.id);
+            log("OLD DATA" + old_data);
             var isReal = false;
             if(old_data != undefined && old_data != null)
                 {
@@ -106,11 +111,14 @@ async function appendData(sensorID, state, occupant, time, distance) {
                 });
                 updateDocumentInfo(sensorID, state, occupant);
             }
-        }
+        
     }).catch(err => {
         log('Error getting document' + err);
     });
-}
+    
+
+
+
 // udpdates spot info itself in database 
 function updateDocumentInfo(sensorID, state, occupant){
     db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
