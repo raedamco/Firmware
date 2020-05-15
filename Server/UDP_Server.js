@@ -118,10 +118,9 @@ async function test_function(sensorID, state, occupant, time, distance)
                     Time: {
                         End: time,
                         Start: time,
-                        List: [time]
+                        History: [time]
                     },
                     "Distance List": [distance],
-                    "Distance (in)": distance
                 }).then(ref => {
                 }).catch(err => {
                     log('Error getting documents', err);
