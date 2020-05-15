@@ -74,7 +74,6 @@ async function appendData(sensorID, state, occupant, time, distance) {
 
 async function test_function(sensorID, state, occupant, time, distance)
 {
-<<<<<<< HEAD
     db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
         if (snap.size == 0) {
             db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
@@ -100,25 +99,10 @@ async function test_function(sensorID, state, occupant, time, distance)
                     if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
                     {
                         db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").doc(doc.id).set({
-                            "Distances": doc.data()["Distances"].push(distance),
+                            Distances: doc.data()["Distances"].push(distance),
                             Time: {
-                                List: doc.data()["Time"]["History"].push(time),
-=======
-          var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot)
-          {
-              querySnapshot.forEach(function(doc)
-              {
-                  log("DOC TEST ID:" + doc.id)
-                  if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
-                  {
-                        log("TEST !!!!!!!!!!");
-
-                         console.log("Test var: " + doc.data().Time.End);
                         doc.data().update({
-                        "Distances": doc.data()["Distances"].push(distance),
-                        Time: {
                                 List:  doc.data()["Time"]["History"].push(time),
->>>>>>> 6ee3fd573fa83d9f1e74db8fc42fd4188c2bff75
                                 End: time,
                             }
                         }, { merge: true });
