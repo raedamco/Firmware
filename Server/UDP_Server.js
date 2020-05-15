@@ -82,10 +82,14 @@ async function test_function(sensorID, state, occupant, time, distance)
               });
         
               return querySnapshot;
-          });
+          }).catch(funciton(error)
+            {
+                log('Error getting documents', err);
+                First_one(sensorID, state, occupant, time, distance);
+            });
            // log("TEST old_data: "+ old_data.Occupied)
            // log("TEst 2: old_data"+ old_data["Occupied"])
-            log("OLD DATA" + old_data.id);
+//            log("OLD DATA" + old_data.id);
             var isReal = false;
             if(old_data != undefined && old_data != null)
                 {
@@ -111,9 +115,11 @@ async function test_function(sensorID, state, occupant, time, distance)
                 db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
                     "Occupied": state,
                     "Occupant": occupant,
-                    "Time.End": time,
-                    "Time.Start": time,
-                    "Time.List": [time],
+                    Time: {
+                        End: time,
+                        Start: time,
+                        List: [time]
+                    },
                     "Distance List": [distance],
                     "Distance (in)": distance
                 }).then(ref => {
