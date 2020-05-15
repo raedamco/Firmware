@@ -79,38 +79,47 @@ async function test_function(sensorID, state, occupant, time, distance)
               querySnapshot.forEach(function(doc) 
               {
                   log("DOC TEST ID:" + doc.id)
+                  if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
+            {
+                log("TEST !!!!!!!!!!");
+                
+                
+                doc.update({
+                    "Distances": doc.data()["Distances"].push(distance),
+                    Time: {
+                        List:  doc.data()["Time"]["History"].push(time),
+                        End: time,
+                    }
+                }).catch(err => {
+                    log('Error getting documents', err);
+                });
+                
+            }
+                  
               });
         
               return querySnapshot;
           }).catch(function(error)
             {
                 log('Error getting documents', err);
-                First_one(sensorID, state, occupant, time, distance);
             });
-           // log("TEST old_data: "+ old_data.Occupied)
-           // log("TEst 2: old_data"+ old_data["Occupied"])
-//            log("OLD DATA" + old_data.id);
-            var isReal = false;
-            if(old_data != undefined && old_data != null)
-                {
-                    isReal = true;
-                }
-            if(old_data.Occupant == occupant && old_data.Occupied == state && isReal)// checks for change in status if not log added to current doc
-            {
-                log("TEST !!!!!!!!!!");
-                
-                /*
-                old_data.update({
-                    "Distance List": old_data.data()["Distance List"].push(old_data.data()["Distance (in)"]),
-                    "Distance (in)": distance,
-                    "Time.List": old_data.data()["Time"]["List"].push(old_data.data()["Time"]["End"]),
-                    "Time.End": time
-                }).catch(err => {
-                    log('Error getting documents', err);
-                });
-                */
-            }
-            else
+//            if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
+//            { 
+//                log("TEST !!!!!!!!!!");
+//                
+//                
+//                doc.update({
+//                    "Distances": doc.data()["Distances"].push(distance),
+//                    Time: {
+//                        List:  doc.data()["Time"]["History"].push(time),
+//                        End: time,
+//                    }
+//                }).catch(err => {
+//                    log('Error getting documents', err);
+//                });
+//                
+//            }
+            if(old_data == undefined || old_data == null)
             {    
                 db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
                     "Occupied": state,
@@ -120,7 +129,7 @@ async function test_function(sensorID, state, occupant, time, distance)
                         Start: time,
                         History: [time]
                     },
-                    "Distance List": [distance],
+                    "Distances": [distance],
                 }).then(ref => {
                 }).catch(err => {
                     log('Error getting documents', err);
