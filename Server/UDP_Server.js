@@ -76,7 +76,11 @@ async function test_function(sensorID, state, occupant, time, distance)
 {
           var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot)
           {
-              log("snapshot"+querySnapshot.id);
+              querySnapshot.forEach(function(doc) 
+              {
+                  log("DOC TEST ID:" doc.id);
+              });
+        
               return querySnapshot;
           });
            // log("TEST old_data: "+ old_data.Occupied)
