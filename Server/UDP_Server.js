@@ -81,13 +81,13 @@ async function appendData(sensorID, state, occupant, time, distance) {
             else
             {    
                 db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
-                    ["Occupied"]: state,
-                    ["Occupant"]: occupant,
-                    ["Time"]["End"]: time,
-                    ["Time"]["Start"]: time,
-                    ["Time"]["List"]: [time],
-                    ["Distance List"]: [distance],
-                    ["Distance (in)"]: distance
+                    "Occupied": state,
+                    "Occupant": occupant,
+                    "Time.End": time,
+                    "Time.Start": time,
+                    "Time.List": [time],
+                    "Distance List": [distance],
+                    "Distance (in)": distance
                 }).then(ref => {
                 }).catch(err => {
                     log('Error getting documents', err);
