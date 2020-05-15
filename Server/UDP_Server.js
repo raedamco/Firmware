@@ -80,17 +80,17 @@ async function test_function(sensorID, state, occupant, time, distance)
               {
                   log("DOC TEST ID:" + doc.id)
                   if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
-            {
-                log("TEST !!!!!!!!!!");
+                  {
+                        log("TEST !!!!!!!!!!");
                 
-                
-                doc.data().update({
-                    "Distances": doc.data()["Distances"].push(distance),
-                    Time: {
-                        List:  doc.data()["Time"]["History"].push(time),
-                        End: time,
-                    }
-                }).catch(err => {
+                         log("Test var: " + doc.data()["Time"]["End"]);
+                        doc.data().update({
+                        "Distances": doc.data()["Distances"].push(distance),
+                        Time: {
+                                List:  doc.data()["Time"]["History"].push(time),
+                                End: time,
+                            }
+                    }).catch(err => {
                     log('Error getting documents', err);
                 });
                 
