@@ -84,7 +84,7 @@ async function test_function(sensorID, state, occupant, time, distance)
                 log("TEST !!!!!!!!!!");
                 
                 
-                doc.update({
+                doc.data().update({
                     "Distances": doc.data()["Distances"].push(distance),
                     Time: {
                         List:  doc.data()["Time"]["History"].push(time),
