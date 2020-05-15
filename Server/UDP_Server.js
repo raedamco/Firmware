@@ -74,7 +74,11 @@ async function appendData(sensorID, state, occupant, time, distance) {
 
 async function test_function(sensorID, state, occupant, time, distance)
 {
-          var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot){return querySnapshot;});
+          var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot)
+          {
+              log("snapshot"+querySnapshot);
+              return querySnapshot;
+          });
            // log("TEST old_data: "+ old_data.Occupied)
            // log("TEst 2: old_data"+ old_data["Occupied"])
             log("OLD DATA" + old_data.id);
