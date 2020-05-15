@@ -101,7 +101,7 @@ async function test_function(sensorID, state, occupant, time, distance)
               return querySnapshot;
           }).catch(function(error)
             {
-                log('Error getting documents', err);
+               // log('Error getting documents', err);
             });
 //            if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
 //            { 
