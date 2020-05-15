@@ -65,8 +65,9 @@ async function appendData(sensorID, state, occupant, time, distance) {
         } else 
         {
             var old_data = db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot){return querySnapshot;});
-            log("TEST old_data: "+ old_data.Occupied)
-            log("TEst 2: old_data"+ old_data["Occupied"])
+           // log("TEST old_data: "+ old_data.Occupied)
+           // log("TEst 2: old_data"+ old_data["Occupied"])
+            log("OLD DATA" + old_data);
             if(old_data.Occupant == occupant && old_data.Occupied == state)// checks for change in status if not log added to current doc
             {
                 log("TEST !!!!!!!!!!");
@@ -112,7 +113,7 @@ function updateDocumentInfo(sensorID, state, occupant){
         }).catch(err => {
             log('Error getting documents', err);
         });
-        log("DATABAES UPDATED FOR SENSOR ID: " + sensorID);
+        log("DATABASE UPDATED FOR SENSOR ID: " + sensorID);
     }).catch(err => {
         log('Error getting document', err);
     });
