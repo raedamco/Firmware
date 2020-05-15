@@ -83,7 +83,7 @@ async function test_function(sensorID, state, occupant, time, distance)
                   {
                         log("TEST !!!!!!!!!!");
                 
-                         log("Test var: " + doc.data()["Time"]["End"]);
+                         log("Test var: " + doc.data().Time.End);
                         doc.data().update({
                         "Distances": doc.data()["Distances"].push(distance),
                         Time: {
