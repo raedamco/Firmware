@@ -64,7 +64,7 @@ async function appendData(sensorID, state, occupant, time, distance) {
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
         } else 
         {
-            var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(function(querySnapshot);
+            var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot);
             
             if(old_data.data().Occupant == occupant && old_data.data().Occupied == state)// checks for change in status if not log added to current doc
             {
