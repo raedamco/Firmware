@@ -58,7 +58,8 @@ server.on('message',function(msg, info) {
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
     //Check if sensor exists in the database before adding data, ensures random data is not added.
-    db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => async function {
+    db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
+        
         if (!doc.exists) 
         {
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
@@ -68,7 +69,7 @@ async function appendData(sensorID, state, occupant, time, distance) {
             var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot){return querySnapshot;});
            // log("TEST old_data: "+ old_data.Occupied)
            // log("TEst 2: old_data"+ old_data["Occupied"])
-            log("OLD DATA" + old_data);
+            log("OLD DATA" + old_data.doc.id);
             var isReal = false;
             if(old_data != undefined && old_data != null)
                 {
