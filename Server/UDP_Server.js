@@ -67,6 +67,9 @@ async function appendData(sensorID, state, occupant, time, distance) {
         {
             test_function(sensorID, state, occupant, time, distance);
         }
+        }).catch(err => {
+        log('Error getting document' + err);
+    });
 }
 
 async function test_function(sensorID, state, occupant, time, distance)
@@ -112,9 +115,7 @@ async function test_function(sensorID, state, occupant, time, distance)
                 updateDocumentInfo(sensorID, state, occupant);
             }
         
-    }).catch(err => {
-        log('Error getting document' + err);
-    });
+}
     
 
 
