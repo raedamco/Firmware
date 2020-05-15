@@ -101,7 +101,6 @@ async function test_function(sensorID, state, occupant, time, distance)
                         db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").doc(doc.id).set({
                             Distances: doc.data()["Distances"].push(distance),
                             Time: {
-                        doc.data().update({
                                 List:  doc.data()["Time"]["History"].push(time),
                                 End: time,
                             }
