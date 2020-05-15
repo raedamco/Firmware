@@ -58,17 +58,23 @@ server.on('message',function(msg, info) {
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
     //Check if sensor exists in the database before adding data, ensures random data is not added.
-    db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
+    db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => async function {
         if (!doc.exists) 
         {
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
         } else 
         {
-            var old_data = db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot){return querySnapshot;});
+            
+            var old_data = await db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time", "desc").limit(1).get().then(async function(querySnapshot){return querySnapshot;});
            // log("TEST old_data: "+ old_data.Occupied)
            // log("TEst 2: old_data"+ old_data["Occupied"])
             log("OLD DATA" + old_data);
-            if(old_data.Occupant == occupant && old_data.Occupied == state)// checks for change in status if not log added to current doc
+            var isReal = false;
+            if(old_data != undefined && old_data != null)
+                {
+                    isReal = true;
+                }
+            if(old_data.Occupant == occupant && old_data.Occupied == state && isReal)// checks for change in status if not log added to current doc
             {
                 log("TEST !!!!!!!!!!");
                 
