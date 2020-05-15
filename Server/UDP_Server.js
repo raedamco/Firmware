@@ -78,7 +78,7 @@ async function test_function(sensorID, state, occupant, time, distance)
           {
               querySnapshot.forEach(function(doc) 
               {
-                  log("DOC TEST ID:" doc.id)
+                  log("DOC TEST ID:" + doc.id)
               });
         
               return querySnapshot;
