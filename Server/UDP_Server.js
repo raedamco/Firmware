@@ -33,6 +33,7 @@ server.on('message',function(msg, info) {
 
 
     var Distance = ((((msg.readUInt32LE(5) * 0.000001) * 343)/2) * 39.37);
+    Distance = Distance.toFixed(3);
     var OccupiedDistance = 48; //Object is within 4 feet (48in)
 
     if (msg.readUIntBE(2,3) == 1){
