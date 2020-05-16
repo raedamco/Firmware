@@ -163,7 +163,9 @@ function array_test()
             {
                 querySnapshot.forEach(function(doc)
                 {
-                   log("Distances:" + doc.data()["Distances"]);
+                    var test = doc.data()["Distances"];
+                    test.push(101)
+                   log("Distances:" + test);
                 });
                     
             }).catch(function(error)
