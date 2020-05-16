@@ -101,11 +101,11 @@ async function test_function(sensorID, state, occupant, time, distance)
                     {
                         log("TEST DISTANCES: "+ doc.data()["Distances"]);
                         log("TEST distance: " + distance );
-                        var the_test = doc.data()["Distances"]
+                        var the_test = await doc.data()["Distances"]
                         typeof the_test;
                         //log("The Test Type : "+ typeof the_test)
                         the_test.push(distance)
-                        var temp_history = doc.data()["Time"]["History"]
+                        var temp_history = await doc.data()["Time"]["History"]
                         typeof temp_history;
                         temp_history.push(time)
                         log("Post push: " + the_test  )
