@@ -98,15 +98,33 @@ async function test_function(sensorID, state, occupant, time, distance)
                 {
                     if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
                     {
+                        log("TEST DISTANCES: "+ doc.data()["Distances"]);
+                        log("TEST distance: " + distance );
+            
                         db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").doc(doc.id).set({
                             Distances: doc.data()["Distances"].push(distance),
                             Time: {
-                                List:  doc.data()["Time"]["History"].push(time),
+                                History:  doc.data()["Time"]["History"].push(time),
                                 End: time,
                             }
                         }, { merge: true });
               }else{
                   log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
+                  // code to make new 
+                  db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
+                    "Occupied": state,
+                    "Occupant": occupant,
+                     Time: {
+                     Begin: time,
+                     End: time,
+                     History: [time]
+                },
+                "Distances": [distance],
+                }).then(ref => {
+                  }).catch(err => {
+                      log('Error getting documents', err);
+                  });
+                    updateDocumentInfo(sensorID, state, occupant);
               }
 
                 });
