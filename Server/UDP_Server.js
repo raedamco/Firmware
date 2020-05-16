@@ -164,6 +164,7 @@ function array_test()
                 querySnapshot.forEach(function(doc)
                 {
                     var test = doc.data()["Distances"];
+                    log("Type: " + typeof test )
                     test.push(101)
                    log("Distances:" + test);
                 });
