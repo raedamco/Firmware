@@ -156,7 +156,7 @@ async function test_function(sensorID, state, occupant, time, distance)
 
 }
 
-
+array_test();
 function array_test()
 {
     db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(1).collection("Data").limit(1).get().then(async function(querySnapshot)
