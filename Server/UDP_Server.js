@@ -95,7 +95,7 @@ async function test_function(sensorID, state, occupant, time, distance)
             //RUN LOGIC HERE TO SEE IF DATA SHOULD BE MERGED WITH EXISITNG DOCUMENT OR CREATE NEW DOCUMENT
             var old_data = db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot)
             {
-                querySnapshot.forEach(function(doc)
+                querySnapshot.forEach(async function(doc)
                 {
                     if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
                     {
