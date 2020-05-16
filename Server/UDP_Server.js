@@ -100,7 +100,11 @@ async function test_function(sensorID, state, occupant, time, distance)
                     {
                         log("TEST DISTANCES: "+ doc.data()["Distances"]);
                         log("TEST distance: " + distance );
-            
+                        var the_test = doc.data()["Distances"]
+                        log("The Test Type : "+ typeof the_test)
+                        the_test.push(555)
+                        the_test.push(distance)
+                        log("Post push: " + the_test  )
                         db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").doc(doc.id).set({
                             Distances: doc.data()["Distances"].push(distance),
                             Time: {
@@ -155,7 +159,7 @@ async function test_function(sensorID, state, occupant, time, distance)
 //
 
 }
-
+/*
 array_test();
 function array_test()
 {
@@ -174,7 +178,7 @@ function array_test()
                  // log('Error getting documents', err);
               });
 }
-
+*/
 // udpdates spot info itself in database
 function updateDocumentInfo(sensorID, state, occupant){
     db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
