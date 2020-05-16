@@ -101,13 +101,17 @@ async function test_function(sensorID, state, occupant, time, distance)
                         log("TEST DISTANCES: "+ doc.data()["Distances"]);
                         log("TEST distance: " + distance );
                         var the_test = doc.data()["Distances"]
-                        log("The Test Type : "+ typeof the_test)
+                        typeof the_test;
+                        //log("The Test Type : "+ typeof the_test)
                         the_test.push(distance)
+                        var temp_history = doc.data()["Time"]["History"]
+                        typeof temp_history;
+                        temp_history.push(time)
                         log("Post push: " + the_test  )
                         db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").doc(doc.id).set({
                             Distances: the_test,
                             Time: {
-                                History:  doc.data()["Time"]["History"].push(time),
+                                History:  temp_history,
                                 End: time,
                             }
                         }, { merge: true });
