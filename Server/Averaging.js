@@ -69,9 +69,10 @@ async function retrieveData(StructureID, FloorID, spotID, DocumentAmounts){
         querySnapshot.forEach(function(doc) {
             var id = doc.id;
             var time = doc.data()["Time.End"];
-
+            log("TIME: " + time);
            if (interpretTime(time)){
                 var occupied = doc.data()["Occupied"];
+               log("OCCUPIED: " + occupied);
                 if (occupied == true){
                     averageOccupancy += 1;
               }
