@@ -1,3 +1,13 @@
+//
+//  UDP_Server.js
+//  Raedam 
+//
+//  Created on 5/13/2020. Modified on 6/30/2020 by Austin Mckee.
+//  Copyright © 2020 Raedam. All rights reserved.
+//
+// This file holds code for the UDP communication between the sensors -> server -> database
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 var udp = require('dgram');
 const admin = require('firebase-admin');
 

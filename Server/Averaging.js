@@ -1,3 +1,14 @@
+//
+//  Averaging.js
+//  Raedam 
+//
+//  Created on 5/13/2020. Modified on 6/30/2020 by Austin Mckee.
+//  Copyright © 2020 Raedam. All rights reserved.
+//
+// This file holds code for the Average Occupancy Graph server side
+// this file calculates the average spots occupied
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 const cron = require('node-cron')
 const admin = require('firebase-admin');
 
@@ -22,15 +33,15 @@ let setAvgOccupancy = 1;
 //Execute code based on time (https://www.npmjs.com/package/node-cron) || Format: sec, min, hr, day of month, month, day of week || */1 = runs every min
 // change schedule for time frequency 
 cron.schedule(" 0 * * * *",()=> {
-    get_average_floor("Parking Structure 1", "Floor 2", docAmount); // add organization long term
-    // add get_average_floor calls for each floor you want inside here
+    get_average_floor("Parking Structure 1", "Floor 2", docAmount); /// add organization long term
+    /// add get_average_floor calls for each floor you want inside here
 })
 function get_average_floor(StructureID, FloorID, DocumentAmounts)
 {
     parseDatabase(StructureID, FloorID, docAmount);
 }
 //Get spot data from database
-// add organization long term 
+/// add organization long term 
 function parseDatabase(StructureID, FloorID, DocumentAmounts)
 {
  var total_avg = 0;
