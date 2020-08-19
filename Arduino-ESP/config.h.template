@@ -1,3 +1,11 @@
+//
+//  config.h
+//  Raedam
+//
+//  Created on 1/10/2019. Modified on 8/18/2020.
+//  Copyright © 2020 Theory Parking. All rights reserved.
+//
+
 #ifndef CONFIG_H
 #define CONFIG_H
 
@@ -8,20 +16,19 @@
 #define SERVER_PORT 15000
 #define HOST_PORT 16000
 
-#define COLLECT_TIME 60000 //1 Minute = 60000 //5 Minutes = 300000 : 10 Minutes = 600000
-
 #define BUFFER_SIZE 1024
 
-#define UNIQUE_ID 1
+#define UNIQUE_ID 19
 
-#define PIN_ECHO 5
-#define PIN_TRIG 17
-
-#define LED_R 16
-#define LED_G 17
-#define LED_B 21
+#define PIN_ECHO 27
+#define PIN_TRIG 12
 
 #define DEBUG
-#define Pilot true
+
+#define COLLECT_TIME 900000 /* 15 Minutes */
+
+#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP 120  /* 900          Time ESP32 will go to sleep (in seconds) */
+#define TIME_TO_DELAY_SLEEP 5000  /* Time ESP32 will delay sleep (in milliseconds)  - Default to 15 seconds for pilots */
 
 #endif
