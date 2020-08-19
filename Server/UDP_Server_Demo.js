@@ -1,3 +1,13 @@
+//
+//  UDP_Server_DEMO.js
+//  Raedam 
+//
+//  Created on 5/13/2020. Modified on 8/19/2020 by Austin Mckee.
+//  Copyright © 2020 Raedam. All rights reserved.
+//
+// This file holds code for the UDP communication between the sensors -> server -> database
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 var udp = require('dgram');
 const admin = require('firebase-admin');
 
@@ -25,10 +35,16 @@ server.on('error',function(error){
 
 // listen for packets
 server.on('message',function(msg, info) {
-    var SensorID = msg.readUInt32LE(0,1);
     var Time = new Date();
+    log("---------------------------------------------------------------------------------------------------------------------------------------------");
+    log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
+
+    var SensorID = msg.readUInt32LE(0,1);
+
 
     var Distance = ((((msg.readUInt32LE(5) * 0.000001) * 343)/2) * 39.37);
+    Distance = Distance.toFixed(3);
+    Distance = parseFloat(Distance,10);
     var OccupiedDistance = 48; //Object is within 4 feet (48in)
 
     if (msg.readUIntBE(2,3) == 1){
@@ -44,39 +60,150 @@ server.on('message',function(msg, info) {
         var Occupied = false;
         var Occupant = "";
     }
-    log("---------------------------------------------------------------");
-    log("Time: " + Time);
-    log("Sensor ID: " + SensorID);
-    log("Sensor Type: " + SensorType);
-    log("Occupied: " + Occupied);
-    log("Distance of: " + Distance);
+
+    log("SENSOR ID: [" + SensorID + "] | SENSOR TYPE: [" + SensorType + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 
     appendData(String(SensorID), Occupied, Occupant, Time, Distance);
     queryDatabase();
     databaseListner();
 });
+// adds data entry for spot
+async function appendData(sensorID, state, occupant, time, distance) {
+    //Check if sensor exists in the database before adding data, ensures random data is not added.
+    db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).get().then(doc => {
 
-function appendData(sensorID, state, occupant, time, distance) {
-    db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").add({
-        ["Occupied"]: state,
-        ["Occpant"]: occupant,
-        ["Time"]: time,
-        ["Distance (in)"]: distance
-    }).then(ref => {
-    }).catch(err => {
-        log('Error getting documents', err);
+        if (!doc.exists)
+        {
+          log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
+        } else
+        {
+            test_function(sensorID, state, occupant, time, distance);
+        }
+        }).catch(err => {
+        //log('Error getting document' + err);
     });
-    updateDocumentInfo(sensorID, state, occupant);
 }
 
-function updateDocumentInfo(sensorID, state, occupant){
-    db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).get().then(doc => {
-            db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).update({
-                "Occupancy.Occupied": state,
-                "Occupancy.Occupant": occupant,
+async function test_function(sensorID, state, occupant, time, distance)
+{
+    db.collection("Demos").doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
+        if (snap.size == 0) {
+            db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").add({
+                "Occupied": state,
+                "Occupant": occupant,
+                Time: {
+                    Begin: time,
+                    End: time,
+                    History: [time]
+                },
+                "Distances": [distance],
+            }).then(ref => {
             }).catch(err => {
                 log('Error getting documents', err);
             });
+            updateDocumentInfo(sensorID, state, occupant);
+        }else{
+            //RUN LOGIC HERE TO SEE IF DATA SHOULD BE MERGED WITH EXISITNG DOCUMENT OR CREATE NEW DOCUMENT
+            var old_data = db.collection("Demos").doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot)
+            {
+                querySnapshot.forEach(async function(doc)
+                {
+                    if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
+                    {
+                        ///log("TEST DISTANCES: "+ doc.data()["Distances"]);
+                       // log("TEST distance: " + distance );
+                        var the_test = await doc.data()["Distances"]
+                        typeof the_test;
+                        //log("The Test Type : "+ typeof the_test)
+                        the_test.push(distance)
+                        var temp_history = await doc.data()["Time"]["History"]
+                        typeof temp_history;
+                        temp_history.push(time)
+                        //log("Post push: " + the_test  )
+                        db.collection("Demos").doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").doc(doc.id).set({
+                            Distances: the_test,
+                            Time: {
+                                History:  temp_history,
+                                End: time,
+                            }
+                        }, { merge: true });
+              }else{
+                  log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
+                  // code to make new 
+                  db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").add({
+                    "Occupied": state,
+                    "Occupant": occupant,
+                     Time: {
+                     Begin: time,
+                     End: time,
+                     History: [time]
+                },
+                "Distances": [distance],
+                }).then(ref => {
+                  }).catch(err => {
+                      log('Error getting documents', err);
+                  });
+                    updateDocumentInfo(sensorID, state, occupant);
+              }
+
+                });
+
+                return querySnapshot;
+            }).catch(function(error)
+              {
+                 // log('Error getting documents', err);
+              });
+        }
+    });
+
+
+//            if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
+//            {
+//                log("TEST !!!!!!!!!!");
+//
+//
+//                doc.update({
+//                    "Distances": doc.data()["Distances"].push(distance),
+//                    Time: {
+//                        List:  doc.data()["Time"]["History"].push(time),
+//                        End: time,
+//                    }
+//                }).catch(err => {
+//                    log('Error getting documents', err);
+//                });
+//
+
+}
+/*
+array_test();
+function array_test()
+{
+    db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc("1").collection("Data").limit(1).get().then(async function(querySnapshot)
+            {
+                querySnapshot.forEach(function(doc)
+                {
+                    var test = doc.data()["Distances"];
+                    log("Type: " + typeof test )
+                    test.push(101)
+                   log("Distances:" + test);
+                });
+                    
+            }).catch(function(error)
+              {
+                 // log('Error getting documents', err);
+              });
+}
+*/
+// udpdates spot info itself in database
+function updateDocumentInfo(sensorID, state, occupant){
+    db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).get().then(doc => {
+        db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).update({
+            "Occupancy.Occupied": state,
+            "Occupancy.Occupant": occupant,
+        }).catch(err => {
+            log('Error getting documents', err);
+        });
+        log("DATABASE UPDATED FOR SENSOR ID: " + sensorID);
     }).catch(err => {
         log('Error getting document', err);
     });
@@ -85,9 +212,7 @@ function updateDocumentInfo(sensorID, state, occupant){
 //emits when socket is ready and listening for datagram msgs
 server.on('listening',function(){
   var address = server.address();
-  log('Server is listening at port: ' + address.port);
-  log('Server ip: ' + address.address);
-  log('Server is IP4/IP6: ' + address.family);
+  log("SERVER LISTENING ON PORT : " + address.port + " | SERVER IP: " + address.address + " | SERVER TYPE: " + address.family);
 });
 
 
@@ -149,15 +274,12 @@ function updateFloorInfo(floor, available){
 }
 
 function updateStructureInfo(structure, available){
-    db.collection('PSU').doc(structure).update({
+    db.collection('Demos').doc(structure).update({
         "Capacity.Available": (capacity - available),
     }).catch(err => {
         log('Error getting documents', err);
     });
 }
-
-
-
 
 
 
