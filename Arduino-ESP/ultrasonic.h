@@ -1,9 +1,9 @@
 //
 //  ultrasonic.h
-//  Theory Parking
+//  Raedam
 //
-//  Created on 1/10/2019. Modified on 1/10/2019.
-//  Copyright © 2020 Theory Parking. All rights reserved.
+//  Created on 1/10/2019. Modified on 8/21/2020.
+//  Copyright © 2020 Raedam Inc. All rights reserved.
 //
 
 #ifndef ULTRASONIC_H

@@ -1,9 +1,9 @@
 //
 //  ultrasonic.cpp
-//  Theory Parking
+//  Raedam
 //
-//  Created on 1/10/2019. Modified on 1/10/2019.
-//  Copyright © 2020 Theory Parking. All rights reserved.
+//  Created on 1/10/2019. Modified on 8/21/2020.
+//  Copyright © 2020 Raedam Inc. All rights reserved.
 //
 
 #include <Arduino.h>
@@ -24,18 +24,18 @@ void ultrasonic::init() {
 }
 
 int ultrasonic::get() {
-#ifdef DEBUG
-  Serial.printf("Ultrasonic on {%d} reads ", _pinTrig);
-#endif
+//#ifdef DEBUGGING
+//  Serial.printf("Ultrasonic on {%d} reads ", _pinTrig);
+//#endif
 
 	digitalWrite(_pinTrig, HIGH);
 	delayMicroseconds(_ECHO_DURATION);
 	digitalWrite(_pinTrig, LOW);
   int replyTime = pulseIn(_pinEcho, HIGH);
   
-#ifdef DEBUG
-  Serial.printf("%d microseconds, %.2fcm, %.2fin\n", replyTime, replyTime/_ECHO_TO_CM, replyTime/_ECHO_TO_IN);
-#endif
+//#ifdef DEBUGGING
+//  Serial.printf("%d microseconds, %.2fcm, %.2fin\n", replyTime, replyTime/_ECHO_TO_CM, replyTime/_ECHO_TO_IN);
+//#endif
 
 	return replyTime;
 }
