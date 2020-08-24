@@ -82,10 +82,12 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
     i+=sizeof(result);
   }
 
+
   if (WiFi_NODE == false){ //if not connected to wifi, send next node infortmation for this sensor's reading
+    Serial.print(String(buff));
     //TO DO: CONVERT BUFF TO STRING AND SEND IT TO NEXT NODE
-//      String msg = buff;//"0b 00 00 00 01 77 2c 00 00 00"; //string of collected data
-//      mesh.sendSingle(NEXT_NODE_ID, msg); //send string of collected sensor data to next node
+//      String msg = buff;//"0b 00 00 00 01 77 2c 00 00 00"; //converted string of collected data
+      mesh.sendSingle(NEXT_NODE_ID, msg); //send string of collected sensor data to next node
   }else{ //if connected to wifi, send sensor's reading to the server as a udp
       socket.beginPacket(SERVER_IP, SERVER_PORT);
       socket.write(buff, buffer_length);

@@ -27,7 +27,7 @@ server.on('error',function(error){
 server.on('message',function(msg, info) {
     var SensorID = msg.readUInt32LE(0,1);
     var Time = new Date();
-
+    log("RECIEVED MSG: " + info);
     var Distance = ((((msg.readUInt32LE(5) * 0.000001) * 343)/2) * 39.37);
     var OccupiedDistance = 48; //Object is within 4 feet (48in)
 

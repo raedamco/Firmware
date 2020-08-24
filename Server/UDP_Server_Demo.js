@@ -1,6 +1,6 @@
 //
 //  UDP_Server_DEMO.js
-//  Raedam 
+//  Raedam
 //
 //  Created on 5/13/2020. Modified on 8/19/2020 by Austin Mckee.
 //  Copyright © 2020 Raedam. All rights reserved.
@@ -14,7 +14,7 @@ const admin = require('firebase-admin');
 let serviceAccount = require('./serverKey.json');
 
 const debug = true;
-var PORT = 15100
+var PORT = 15300
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -41,17 +41,18 @@ server.on('message',function(msg, info) {
 
     var SensorID = msg.readUInt32LE(0,1);
 
-
-    var Distance = ((((msg.readUInt32LE(5) * 0.000001) * 343)/2) * 39.37);
+    log(msg.toString('hex',1,5));
+    log(msg.readUIntBE(1,2));
+    var Distance = ((((msg.readUInt32LE(1,5) * 0.000001) * 343)/2) * 39.37);
     Distance = Distance.toFixed(3);
     Distance = parseFloat(Distance,10);
     var OccupiedDistance = 48; //Object is within 4 feet (48in)
-
-    if (msg.readUIntBE(2,3) == 1){
-        var SensorType = "Ultrasonic";
-    }else{
-        var SensorType = "Other Sensor";
-    }
+    //
+    // if (msg.readUIntBE(2,3) == 1){
+    //     var SensorType = "Ultrasonic";
+    // }else{
+    //     var SensorType = "Other Sensor";
+    // }
 
     if (Distance <= OccupiedDistance) {
         var Occupied = true;
@@ -61,11 +62,7 @@ server.on('message',function(msg, info) {
         var Occupant = "";
     }
 
-    log("SENSOR ID: [" + SensorID + "] | SENSOR TYPE: [" + SensorType + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
-
-    appendData(String(SensorID), Occupied, Occupant, Time, Distance);
-    queryDatabase();
-    databaseListner();
+    log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 });
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
@@ -129,7 +126,7 @@ async function test_function(sensorID, state, occupant, time, distance)
                         }, { merge: true });
               }else{
                   log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
-                  // code to make new 
+                  // code to make new
                   db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").add({
                     "Occupied": state,
                     "Occupant": occupant,
@@ -187,7 +184,7 @@ function array_test()
                     test.push(101)
                    log("Distances:" + test);
                 });
-                    
+
             }).catch(function(error)
               {
                  // log('Error getting documents', err);
