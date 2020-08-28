@@ -25,7 +25,7 @@ void ultrasonic::init() {
 
 int ultrasonic::get() {
 //#ifdef DEBUGGING
-//  Serial.printf("Ultrasonic on {%d} reads ", _pinTrig);
+  Serial.printf("Ultrasonic on {%d} reads ", _pinTrig);
 //#endif
 
 	digitalWrite(_pinTrig, HIGH);
@@ -34,7 +34,7 @@ int ultrasonic::get() {
   int replyTime = pulseIn(_pinEcho, HIGH);
   
 //#ifdef DEBUGGING
-//  Serial.printf("%d microseconds, %.2fcm, %.2fin\n", replyTime, replyTime/_ECHO_TO_CM, replyTime/_ECHO_TO_IN);
+  Serial.printf("%d microseconds, %.2fcm, %.2fin\n", replyTime, replyTime/_ECHO_TO_CM, replyTime/_ECHO_TO_IN);
 //#endif
 
 	return replyTime;

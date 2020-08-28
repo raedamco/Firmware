@@ -27,10 +27,10 @@ void loop() {
 }
 
 void sendPacket(uint8_t sensor_cid, unsigned long r) {
-  unsigned long uid = UNIQUE_ID;          // 1 uint8_t 
+  unsigned long uid = UNIQUE_ID;          // 4 uint8_t 
   unsigned long result = r;               // 4 uint8_t
 
-  const unsigned long buffer_length = 1+4;
+  const unsigned long buffer_length = 4+4;
   uint8_t buff[buffer_length] = { 0 };
   {
     int i=0;

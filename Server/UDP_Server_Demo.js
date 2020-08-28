@@ -14,7 +14,7 @@ const admin = require('firebase-admin');
 let serviceAccount = require('./serverKey.json');
 
 const debug = true;
-var PORT = 15300
+var PORT = 15100
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -39,20 +39,17 @@ server.on('message',function(msg, info) {
     log("---------------------------------------------------------------------------------------------------------------------------------------------");
     log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
 
-    var SensorID = msg.readUInt32LE(0,1);
+    var SensorID = msg.readUIntLE(0,1);
 
-    log(msg.toString('hex',1,5));
-    log(msg.readUIntBE(1,2));
-    var Distance = ((((msg.readUInt32LE(1,5) * 0.000001) * 343)/2) * 39.37);
+    let stringHex = msg.toString('hex');
+    log(stringHex);
+    // log(msg.readUInt8(4,8));
+    // log("Sensor ID: " + msg.readUInt8(0,1));
+
+    var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
     Distance = Distance.toFixed(3);
     Distance = parseFloat(Distance,10);
     var OccupiedDistance = 48; //Object is within 4 feet (48in)
-    //
-    // if (msg.readUIntBE(2,3) == 1){
-    //     var SensorType = "Ultrasonic";
-    // }else{
-    //     var SensorType = "Other Sensor";
-    // }
 
     if (Distance <= OccupiedDistance) {
         var Occupied = true;
@@ -64,6 +61,7 @@ server.on('message',function(msg, info) {
 
     log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 });
+
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
     //Check if sensor exists in the database before adding data, ensures random data is not added.

@@ -14,7 +14,7 @@ const admin = require('firebase-admin');
 let serviceAccount = require('./serverKey.json');
 
 const debug = true;
-var PORT = 15300
+var PORT = 15100
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -39,15 +39,14 @@ server.on('message',function(msg, info) {
     log("---------------------------------------------------------------------------------------------------------------------------------------------");
     log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
 
-    var SensorID = msg.readUInt8(0,2);
+    var SensorID = msg.readUIntLE(0,1);
 
     let stringHex = msg.toString('hex');
     log(stringHex);
     // log(msg.readUInt8(4,8));
     // log("Sensor ID: " + msg.readUInt8(0,1));
 
-
-    var Distance = ((((msg.readUInt8(4,8) * 0.000001) * 343)/2) * 39.37);
+    var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
     Distance = Distance.toFixed(3);
     Distance = parseFloat(Distance,10);
     var OccupiedDistance = 48; //Object is within 4 feet (48in)
