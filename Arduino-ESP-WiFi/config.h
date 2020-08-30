@@ -13,13 +13,13 @@
 #define WIFI_PASS ""
 
 #define SERVER_IP "35.247.56.47"
-#define SERVER_PORT 15100
+#define SERVER_PORT 15000
 
 #define MESH_SSID       "RaedamSSID"
 #define MESH_PASSWORD   "RaedamPassword"
 #define MESH_PORT       5555
 
-#define UNIQUE_ID 14
+#define UNIQUE_ID 5
 
 #define PIN_ECHO 27
 #define PIN_TRIG 12
