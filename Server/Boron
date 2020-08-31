@@ -14,25 +14,25 @@ server.on('message', (msg, info) => {
     console.log("---------------------------------------------------------------------------------------------------------------------------------------------");
     console.log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
 
-    var SensorID = msg.readUIntLE(0,1);
+    // var SensorID = msg.readUIntLE(0,1);
 
     let stringHex = msg.toString('hex');
-    //log(stringHex);
+    console.log(stringHex);
     // log(msg.readUInt8(4,8));
     // log("Sensor ID: " + msg.readUInt8(0,1));
 
-    var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
-    Distance = Distance.toFixed(3);
-    Distance = parseFloat(Distance,10);
-    var OccupiedDistance = 48; //Object is within 4 feet (48in)
-
-    if (Distance <= OccupiedDistance) {
-        var Occupied = true;
-        var Occupant = "";
-    }else{
-        var Occupied = false;
-        var Occupant = "";
-    }
+    // var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
+    // Distance = Distance.toFixed(3);
+    // Distance = parseFloat(Distance,10);
+    // var OccupiedDistance = 48; //Object is within 4 feet (48in)
+    //
+    // if (Distance <= OccupiedDistance) {
+    //     var Occupied = true;
+    //     var Occupant = "";
+    // }else{
+    //     var Occupied = false;
+    //     var Occupant = "";
+    // }
 
     console.log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 
