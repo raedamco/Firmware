@@ -34,9 +34,9 @@ server.on('message', (msg, info) => {
     //     var Occupant = "";
     // }
 
-    console.log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
+    // console.log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 
-    server.send(msg, 0, msg.length, info.port, info.address);
+    // server.send(msg, 0, msg.length, info.port, info.address);
 });
 
 server.on('listening', () => {
