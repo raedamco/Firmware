@@ -4,7 +4,7 @@ const admin = require('firebase-admin');
 let serviceAccount = require('./serverKey.json');
 
 const debug = true;
-var PORT = 15100
+var PORT = 15300
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
