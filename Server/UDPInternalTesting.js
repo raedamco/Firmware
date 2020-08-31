@@ -25,17 +25,21 @@ server.on('error',function(error){
 
 // listen for packets
 server.on('message',function(msg, info) {
-    var SensorID = msg.readUInt32LE(0,1);
     var Time = new Date();
-    log("RECIEVED MSG: " + info);
-    var Distance = ((((msg.readUInt32LE(5) * 0.000001) * 343)/2) * 39.37);
-    var OccupiedDistance = 48; //Object is within 4 feet (48in)
+    log("---------------------------------------------------------------------------------------------------------------------------------------------");
+    log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
 
-    if (msg.readUIntBE(2,3) == 1){
-        var SensorType = "Ultrasonic";
-    }else{
-        var SensorType = "Other Sensor";
-    }
+    var SensorID = msg.readUIntLE(0,1);
+
+    let stringHex = msg.toString('hex');
+    //log(stringHex);
+    // log(msg.readUInt8(4,8));
+    // log("Sensor ID: " + msg.readUInt8(0,1));
+
+    var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
+    Distance = Distance.toFixed(3);
+    Distance = parseFloat(Distance,10);
+    var OccupiedDistance = 48; //Object is within 4 feet (48in)
 
     if (Distance <= OccupiedDistance) {
         var Occupied = true;
@@ -44,12 +48,8 @@ server.on('message',function(msg, info) {
         var Occupied = false;
         var Occupant = "";
     }
-    log("---------------------------------------------------------------");
-    log("Time: " + Time);
-    log("Sensor ID: " + SensorID);
-    log("Sensor Type: " + SensorType);
-    log("Occupied: " + Occupied);
-    log("Distance of: " + Distance);
+
+    log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 
     appendData(String(SensorID), Occupied, Occupant, Time, Distance);
     queryDatabase();
