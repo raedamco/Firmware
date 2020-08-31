@@ -1,23 +1,8 @@
-// To run:
-// node server.js
-
 const dgram = require('dgram');
-const admin = require('firebase-admin');
-let serviceAccount = require('./serverKey.json');
 
 const server = dgram.createSocket('udp4');
+
 const listenPort = 7123;
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
-
-let db = admin.firestore();
-
-var occupiedSpots = [];
-var capacity;
-
-const debug = true;
 
 server.on('error', (err) => {
 	console.log('server error', err.stack);
@@ -26,13 +11,12 @@ server.on('error', (err) => {
 
 server.on('message', (msg, info) => {
     var Time = new Date();
-    log("---------------------------------------------------------------------------------------------------------------------------------------------");
-    log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
+    console.log("---------------------------------------------------------------------------------------------------------------------------------------------");
+    console.log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
 
     var SensorID = msg.readUIntLE(0,1);
 
     let stringHex = msg.toString('hex');
-    log(stringHex);
     //log(stringHex);
     // log(msg.readUInt8(4,8));
     // log("Sensor ID: " + msg.readUInt8(0,1));
@@ -50,9 +34,9 @@ server.on('message', (msg, info) => {
         var Occupant = "";
     }
 
-    log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
+    console.log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 
-	server.send(msg, 0, msg.length, info.port, info.address);
+    server.send(msg, 0, msg.length, info.port, info.address);
 });
 
 server.on('listening', () => {
@@ -60,10 +44,3 @@ server.on('listening', () => {
 });
 
 server.bind(listenPort);
-
-//Only log when debugging not production
-function log(message) {
-  if (debug) {
-    console.log(message);
-  }
-}
