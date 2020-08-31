@@ -52,7 +52,7 @@ server.on('message', (msg, info) => {
 
     log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 
-	// server.send(msg, 0, msg.length, info.port, info.address);
+	server.send(msg, 0, msg.length, info.port, info.address);
 });
 
 server.on('listening', () => {
