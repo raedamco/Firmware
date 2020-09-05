@@ -14,7 +14,7 @@ const admin = require('firebase-admin');
 let serviceAccount = require('./serverKey.json');
 
 const debug = true;
-var PORT = 15100
+var PORT = 15000
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -40,11 +40,6 @@ server.on('message',function(msg, info) {
     log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
 
     var SensorID = msg.readUIntLE(0,1);
-
-    let stringHex = msg.toString('hex');
-    log(stringHex);
-    // log(msg.readUInt8(4,8));
-    // log("Sensor ID: " + msg.readUInt8(0,1));
 
     var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
     Distance = Distance.toFixed(3);
