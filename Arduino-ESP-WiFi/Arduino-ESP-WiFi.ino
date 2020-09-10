@@ -6,33 +6,128 @@
 //  Copyright © 2020 Raedam Inc. All rights reserved.
 //
 
-#include <WiFi.h>
-
-#ifndef OFFLINE
-#include <WiFiUdp.h>
-#endif OFFLINE
-
 #include "config.h"
 #include "ultrasonic.h"
 #include "namedMesh.h"
-
-const byte MaxByteArraySize = 8;
+#include "BLEDevice.h"
 
 Scheduler userScheduler;
 namedMesh mesh;
 
 ultrasonic ultra = ultrasonic(PIN_TRIG,PIN_ECHO);
-WiFiUDP socket;
 
 String NodeName = String(UNIQUE_ID);
 
+static BLEUUID serviceUUID("9c1b9a0d-b5be-4a40-8f7a-66b36d0a5176");
+static BLEUUID    charUUID("b4250401-fb4b-4746-b2b0-93f0e61122c6");
+
+static boolean doConnect = false;
+static boolean connected = false;
+static boolean doScan = false;
+static BLERemoteCharacteristic* pRemoteCharacteristic;
+static BLEAdvertisedDevice* myDevice;
+
+static void notifyCallback(
+  BLERemoteCharacteristic* pBLERemoteCharacteristic,
+  uint8_t* pData,
+  size_t length,
+  bool isNotify) {
+    Serial.print("Notify callback for characteristic ");
+    Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
+    Serial.print(" of data length ");
+    Serial.println(length);
+    Serial.print("data: ");
+    Serial.println((char*)pData);
+}
+
+class MyClientCallback : public BLEClientCallbacks {
+  void onConnect(BLEClient* pclient) {
+  }
+
+  void onDisconnect(BLEClient* pclient) {
+    connected = false;
+    Serial.println("onDisconnect");
+  }
+};
+
+bool connectToServer() {
+    Serial.print("Forming a connection to ");
+    Serial.println(myDevice->getAddress().toString().c_str());
+    
+    BLEClient*  pClient  = BLEDevice::createClient();
+    Serial.println(" - Created client");
+
+    pClient->setClientCallbacks(new MyClientCallback());
+
+    // Connect to the remove BLE Server.
+    pClient->connect(myDevice);  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
+    Serial.println(" - Connected to server");
+
+    // Obtain a reference to the service we are after in the remote BLE server.
+    BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
+    if (pRemoteService == nullptr) {
+      Serial.print("Failed to find our service UUID: ");
+      Serial.println(serviceUUID.toString().c_str());
+      pClient->disconnect();
+      return false;
+    }
+    Serial.println(" - Found our service");
+
+
+    // Obtain a reference to the characteristic in the service of the remote BLE server.
+    pRemoteCharacteristic = pRemoteService->getCharacteristic(charUUID);
+    if (pRemoteCharacteristic == nullptr) {
+      Serial.print("Failed to find our characteristic UUID: ");
+      Serial.println(charUUID.toString().c_str());
+      pClient->disconnect();
+      return false;
+    }
+    Serial.println(" - Found our characteristic");
+
+    // Read the value of the characteristic.
+    if(pRemoteCharacteristic->canRead()) {
+      std::string value = pRemoteCharacteristic->readValue();
+      Serial.print("The characteristic value was: ");
+      Serial.println(value.c_str());
+    }
+
+    if(pRemoteCharacteristic->canNotify())
+      pRemoteCharacteristic->registerForNotify(notifyCallback);
+
+    connected = true;
+    return true;
+}
+/**
+ * Scan for BLE servers and find the first one that advertises the service we are looking for.
+ */
+class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
+ /**
+   * Called for each advertising BLE server.
+   */
+  void onResult(BLEAdvertisedDevice advertisedDevice) {
+    Serial.print("BLE Advertised Device found: ");
+    Serial.println(advertisedDevice.toString().c_str());
+
+    // We have found a device, let us now see if it contains the service we are looking for.
+    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID)) {
+
+      BLEDevice::getScan()->stop();
+      myDevice = new BLEAdvertisedDevice(advertisedDevice);
+      doConnect = true;
+      doScan = true;
+
+    } // Found our server
+  } // onResult
+}; // MyAdvertisedDeviceCallbacks
+
 void setup() {
   Serial.begin(115200);
-  setupBLEMesh();
+  setupMesh();
+  setupBLE();
 }
 
 void loop() {
-  mesh.update(); //run the user scheduler as well
+  mesh.update();
 }
 
 void sendPacket(uint8_t sensor_cid, unsigned long r) {
@@ -48,7 +143,7 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
     memcpy(&buff[i], &result, sizeof(result));
     i+=sizeof(result);
   }
-  
+
   char sensorData[buffer_length];
 
   for(int i=0; i<buffer_length; i++){
@@ -68,60 +163,73 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
       buff[i] = t1[i];
   }
   
-  socket.beginPacket(SERVER_IP, SERVER_PORT);
-  socket.write(buff,buffer_length);
-  socket.endPacket();
-  
+  if (doConnect == true) {
+    if (connectToServer()) {
+      Serial.println("We are now connected to the BLE Server.");
+    } else {
+      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+    }
+    doConnect = false;
+  }
+
+  if (connected) {
+    pRemoteCharacteristic->writeValue(buff,buffer_length);
+  }else if(doScan){
+    BLEDevice::getScan()->start(0);  // this is just eample to start scan after disconnect, most likely there is better way to do it in arduino
+  }
 }
 
 Task taskSendMessage(TASK_SECOND*COLLECT_TIME, TASK_FOREVER, []() { //collect and send every 30 seconds
-  sendPacket(ULTRASONIC_CID, ultra.get());
+    sendPacket(ULTRASONIC_CID, ultra.get());
 });
 
-void setupBLEMesh(){
-  mesh.init(MESH_SSID, MESH_PASSWORD, &userScheduler, MESH_PORT); //initialize ble mesh
+void setupMesh(){
+    mesh.init(MESH_SSID, MESH_PASSWORD, &userScheduler, MESH_PORT); //initialize ble mesh
     mesh.setName(NodeName); //assign number to this node
-    mesh.stationManual(WIFI_SSID, WIFI_PASS);
 
-    socket.begin(SERVER_PORT);
-    
     mesh.onReceive([](String &from, String &msg) { //ble mesh recieved msg
         String fromSensor = from.c_str(); //get node number that sent msg
         String messageFromSensor = msg.c_str(); //msg recieved
         
-        #ifdef DEBUGGING
-          Serial.println(String("Sensor: " + fromSensor + " Message: " + messageFromSensor)); //log what node sent the info and what the msg was passed along
-        #endif
-        
-
         const unsigned long buffer_length = 4+4;
         uint8_t buff[buffer_length] = { 0 };
         
         for(int i=0; i<buffer_length; i++){
-          #ifdef DEBUGGING
-            Serial.printf(" %02x",messageFromSensor[i]);
-          #endif
             buff[i] = messageFromSensor[i];
         }
-
-        socket.beginPacket(SERVER_IP, SERVER_PORT); //send ble mesh forwarded info to server as a udp packet
-        socket.write(buff,buffer_length);
-        socket.endPacket();
+        
+        sendData(buff,buffer_length);
       });
     
-    mesh.onChangedConnections([]() {
-      #ifdef DEBUGGING
-        Serial.printf("Changed connection\n");
-      #endif
-    });
+    mesh.onChangedConnections([]() {});
 
     userScheduler.addTask(taskSendMessage); //add task to send msg from this node
     taskSendMessage.enable(); //enable task to send msg from this node
 }
 
-/******Documentation*****
-  WiFi                https://www.arduino.cc/en/Reference/WiFi
-  WiFi.begion()       https://www.arduino.cc/en/Reference/WiFiBegin
-  WiFi.status()       https://www.arduino.cc/en/Reference/WiFiStatus
-  WiFi.write()        https://www.arduino.cc/en/Reference/WiFiServerWrite
-*/
+void setupBLE(){
+  BLEDevice::init("RaedamUnit8");
+  BLEScan* pBLEScan = BLEDevice::getScan();
+  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pBLEScan->setInterval(1349);
+  pBLEScan->setWindow(449);
+  pBLEScan->setActiveScan(true);
+  pBLEScan->start(60, false);
+}
+
+void sendData(uint8_t* buff, uint8_t buffer_length){
+  if (doConnect == true) {
+    if (connectToServer()) {
+      Serial.println("We are now connected to the BLE Server.");
+    } else {
+      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+    }
+    doConnect = false;
+  }
+
+  if (connected) {
+    pRemoteCharacteristic->writeValue(buff, buffer_length);
+  }else if(doScan){
+    BLEDevice::getScan()->start(0);  // this is just eample to start scan after disconnect, most likely there is better way to do it in arduino
+  }
+}

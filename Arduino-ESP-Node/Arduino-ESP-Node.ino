@@ -55,7 +55,10 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
   const char* t1 = new char [buffer_length];
   t1 = forwardString.c_str();
 
-  mesh.sendSingle(nextNode, forwardString); 
+  mesh.sendSingle(nextNode, forwardString);
+  #ifdef DEBUGGING
+     Serial.println(String("SENT DATA TO NEXT NODE: " + forwardString)); //log what node sent the info and what the msg was passed along
+   #endif 
 }
 
 Task taskSendMessage(TASK_SECOND*COLLECT_TIME, TASK_FOREVER, []() { //collect and send every 30 seconds
@@ -73,7 +76,7 @@ void setupBLEMesh(){
        String messageFromSensor = msg.c_str(); //msg recieved
        
        #ifdef DEBUGGING
-         Serial.println(String("Sensor: " + fromSensor + " Message: " + messageFromSensor)); //log what node sent the info and what the msg was passed along
+         Serial.println(String("GOT DATA FROM Sensor: " + fromSensor + " Message: " + messageFromSensor)); //log what node sent the info and what the msg was passed along
        #endif
       
        mesh.sendSingle(nextNode, messageFromSensor); //forward recieved msg to next node in chain until it reaches sensor w/ WiFi connection
