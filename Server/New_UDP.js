@@ -14,7 +14,7 @@ const admin = require('firebase-admin');
 let serviceAccount = require('./serverKey.json');
 
 const debug = true;
-var PORT = 15100
+var PORT = 15000
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -41,11 +41,6 @@ server.on('message',function(msg, info) {
 
     var SensorID = msg.readUIntLE(0,1);
 
-    let stringHex = msg.toString('hex');
-    log(stringHex);
-    // log(msg.readUInt8(4,8));
-    // log("Sensor ID: " + msg.readUInt8(0,1));
-
     var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
     Distance = Distance.toFixed(3);
     Distance = parseFloat(Distance,10);
@@ -65,7 +60,7 @@ server.on('message',function(msg, info) {
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
     //Check if sensor exists in the database before adding data, ensures random data is not added.
-    db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).get().then(doc => {
+    db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
 
         if (!doc.exists)
         {
@@ -81,9 +76,9 @@ async function appendData(sensorID, state, occupant, time, distance) {
 
 async function test_function(sensorID, state, occupant, time, distance)
 {
-    db.collection("Demos").doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
+    db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
         if (snap.size == 0) {
-            db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").add({
+            db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
                 "Occupied": state,
                 "Occupant": occupant,
                 Time: {
@@ -99,7 +94,7 @@ async function test_function(sensorID, state, occupant, time, distance)
             updateDocumentInfo(sensorID, state, occupant);
         }else{
             //RUN LOGIC HERE TO SEE IF DATA SHOULD BE MERGED WITH EXISITNG DOCUMENT OR CREATE NEW DOCUMENT
-            var old_data = db.collection("Demos").doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot)
+            var old_data = db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot)
             {
                 querySnapshot.forEach(async function(doc)
                 {
@@ -115,7 +110,7 @@ async function test_function(sensorID, state, occupant, time, distance)
                         typeof temp_history;
                         temp_history.push(time)
                         //log("Post push: " + the_test  )
-                        db.collection("Demos").doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").doc(doc.id).set({
+                        db.collection("PSU").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").doc(doc.id).set({
                             Distances: the_test,
                             Time: {
                                 History:  temp_history,
@@ -125,7 +120,7 @@ async function test_function(sensorID, state, occupant, time, distance)
               }else{
                   log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
                   // code to make new
-                  db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).collection("Data").add({
+                  db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
                     "Occupied": state,
                     "Occupant": occupant,
                      Time: {
@@ -191,8 +186,8 @@ function array_test()
 */
 // udpdates spot info itself in database
 function updateDocumentInfo(sensorID, state, occupant){
-    db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).get().then(doc => {
-        db.collection('Demos').doc('Parking Structure 1').collection("Floor 1").doc(sensorID).update({
+    db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
+        db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).update({
             "Occupancy.Occupied": state,
             "Occupancy.Occupant": occupant,
         }).catch(err => {
@@ -220,11 +215,11 @@ server.bind(PORT);
 
 
 function queryDatabase(){
-    db.collection("Demos").doc("Parking Structure 1").get().then(doc => {
+    db.collection("PSU").doc("Parking Structure 1").get().then(doc => {
         capacity = doc.data()["Capacity"]["Capacity"];
     });
 
-    db.collection("Demos").doc("Parking Structure 1").collection("Floor 1").get().then(snapshot => {
+    db.collection("PSU").doc("Parking Structure 1").collection("Floor 2").get().then(snapshot => {
         snapshot.forEach(doc => {
             if (doc.data()["Occupancy"]["Occupied"] == true){
                 if (occupiedSpots.includes(doc.id) == false){
@@ -232,13 +227,13 @@ function queryDatabase(){
                 }
             }
         });
-        updateFloorInfo("Floor 1", occupiedSpots.length);
+        updateFloorInfo("Floor 2", occupiedSpots.length);
         updateStructureInfo("Parking Structure 1", occupiedSpots.length);
     });
 }
 
 function databaseListner(){
-    db.collection("Demos").doc("Parking Structure 1").collection("Floor 1").onSnapshot(function(snapshot) {
+    db.collection("PSU").doc("Parking Structure 1").collection("Floor 2").onSnapshot(function(snapshot) {
         snapshot.docChanges().forEach(function(change) {
             if (change.type === "modified") {
                 if (change.doc.data()["Occupancy"]["Occupied"] == true) {
@@ -254,14 +249,14 @@ function databaseListner(){
                     }
                 }
             }
-            updateFloorInfo("Floor 1", occupiedSpots.length);
+            updateFloorInfo("Floor 2", occupiedSpots.length);
             updateStructureInfo("Parking Structure 1", occupiedSpots.length);
         });
     });
 }
 
 function updateFloorInfo(floor, available){
-    db.collection('Demos').doc('Parking Structure 1').update({
+    db.collection('PSU').doc('Parking Structure 1').update({
         ["Floor Data." + floor + ".Available"]: (capacity - available),
     }).catch(err => {
         log('Error getting documents', err);
@@ -269,7 +264,7 @@ function updateFloorInfo(floor, available){
 }
 
 function updateStructureInfo(structure, available){
-    db.collection('Demos').doc(structure).update({
+    db.collection('PSU').doc(structure).update({
         "Capacity.Available": (capacity - available),
     }).catch(err => {
         log('Error getting documents', err);
