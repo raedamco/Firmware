@@ -2,24 +2,26 @@
 //  Arduino-ESP-WiFi.ino
 //  Raedam
 //
-//  Created on 1/10/2019. Modified on 8/27/2020.
+//  Created on 1/10/2019. Modified on 9/17/2020.
 //  Copyright © 2020 Raedam Inc. All rights reserved.
 //
 
 #include "config.h"
 #include "ultrasonic.h"
-#include "namedMesh.h"
+
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
 #include "BLEDevice.h"
 
-Scheduler userScheduler;
-namedMesh mesh;
+#define SERVICE_UUID        "06afc201-1fb5-459e-8fcc-c5c9c331914b"  //this sensors' ID: First 2 digits indicate the sensors' ID 01 = sensor 1
+#define CHARACTERISTIC_UUID "06b5483e-36e1-4688-b7f5-ea07361b26a8"  //this sensors' data ID: First 2 digits indicate the sensors' ID 01 = sensor 1
+
+static BLEUUID serviceUUID("07afc201-1fb5-459e-8fcc-c5c9c331914b"); // The remote service we wish to connect to.
+static BLEUUID    charUUID("07b5483e-36e1-4688-b7f5-ea07361b26a8"); // The characteristic of the remote service we are interested in.
 
 ultrasonic ultra = ultrasonic(PIN_TRIG,PIN_ECHO);
-
-String NodeName = String(UNIQUE_ID);
-
-static BLEUUID serviceUUID("9c1b9a0d-b5be-4a40-8f7a-66b36d0a5176");
-static BLEUUID    charUUID("b4250401-fb4b-4746-b2b0-93f0e61122c6");
+unsigned long lastUpdate = 0;
 
 static boolean doConnect = false;
 static boolean connected = false;
@@ -27,11 +29,7 @@ static boolean doScan = false;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
 static BLEAdvertisedDevice* myDevice;
 
-static void notifyCallback(
-  BLERemoteCharacteristic* pBLERemoteCharacteristic,
-  uint8_t* pData,
-  size_t length,
-  bool isNotify) {
+static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
     Serial.print("Notify callback for characteristic ");
     Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
     Serial.print(" of data length ");
@@ -97,13 +95,10 @@ bool connectToServer() {
     connected = true;
     return true;
 }
-/**
- * Scan for BLE servers and find the first one that advertises the service we are looking for.
- */
+
+//Scan for BLE servers and find the first one that advertises the service we are looking for.
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
- /**
-   * Called for each advertising BLE server.
-   */
+//Called for each advertising BLE server.
   void onResult(BLEAdvertisedDevice advertisedDevice) {
     Serial.print("BLE Advertised Device found: ");
     Serial.println(advertisedDevice.toString().c_str());
@@ -120,14 +115,18 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
   } // onResult
 }; // MyAdvertisedDeviceCallbacks
 
+
 void setup() {
   Serial.begin(115200);
-  setupMesh();
-  setupBLE();
+  setupBLEAdverstising();
+  setupBLEScan();
 }
 
 void loop() {
-  mesh.update();
+  if(millis() - lastUpdate >= COLLECT_TIME){
+    sendPacket(ULTRASONIC_CID, ultra.get());
+    lastUpdate = millis();
+  }
 }
 
 void sendPacket(uint8_t sensor_cid, unsigned long r) {
@@ -143,90 +142,38 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
     memcpy(&buff[i], &result, sizeof(result));
     i+=sizeof(result);
   }
-
-  char sensorData[buffer_length];
-
-  for(int i=0; i<buffer_length; i++){
-      sensorData[i] = buff[i];
-  }
-
-  String forwardString;
-  for(int i=0; i<buffer_length; i++){
-    String convertedString = String(sensorData[i]);
-    forwardString+= convertedString; 
-  }
-
-  const char* t1 = new char [buffer_length];
-  t1 = forwardString.c_str();
-
-  for(int i=0; i<buffer_length; i++){
-      buff[i] = t1[i];
-  }
-  
-  if (doConnect == true) {
-    if (connectToServer()) {
-      Serial.println("We are now connected to the BLE Server.");
-    } else {
-      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
-    }
-    doConnect = false;
-  }
-
-  if (connected) {
-    pRemoteCharacteristic->writeValue(buff,buffer_length);
-  }else if(doScan){
-    BLEDevice::getScan()->start(0);  // this is just eample to start scan after disconnect, most likely there is better way to do it in arduino
-  }
+  sendData(buff, buffer_length);
 }
 
-Task taskSendMessage(TASK_SECOND*COLLECT_TIME, TASK_FOREVER, []() { //collect and send every 30 seconds
-    sendPacket(ULTRASONIC_CID, ultra.get());
-});
+void setupBLEAdverstising(){
+  BLEDevice::init("RaedamUnit6");
+  BLEServer *pServer = BLEDevice::createServer();
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+  BLECharacteristic *pCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
 
-void setupMesh(){
-    mesh.init(MESH_SSID, MESH_PASSWORD, &userScheduler, MESH_PORT); //initialize ble mesh
-    mesh.setName(NodeName); //assign number to this node
-
-    mesh.onReceive([](String &from, String &msg) { //ble mesh recieved msg
-        String fromSensor = from.c_str(); //get node number that sent msg
-        String messageFromSensor = msg.c_str(); //msg recieved
-        
-        const unsigned long buffer_length = 4+4;
-        uint8_t buff[buffer_length] = { 0 };
-        
-        for(int i=0; i<buffer_length; i++){
-            buff[i] = messageFromSensor[i];
-        }
-        
-        sendData(buff,buffer_length);
-      });
-    
-    mesh.onChangedConnections([]() {});
-
-    userScheduler.addTask(taskSendMessage); //add task to send msg from this node
-    taskSendMessage.enable(); //enable task to send msg from this node
+  pService->start();
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(true);
+  pAdvertising->setMinPreferred(0x12);
+  BLEDevice::startAdvertising();
 }
 
-void setupBLE(){
-  BLEDevice::init("RaedamUnit8");
+void setupBLEScan(){
   BLEScan* pBLEScan = BLEDevice::getScan();
   pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setInterval(1349);
   pBLEScan->setWindow(449);
   pBLEScan->setActiveScan(true);
-  pBLEScan->start(60, false);
+  pBLEScan->start(5, false);
 }
 
 void sendData(uint8_t* buff, uint8_t buffer_length){
   if (doConnect == true) {
-    if (connectToServer()) {
-      Serial.println("We are now connected to the BLE Server.");
-    } else {
-      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
-    }
     doConnect = false;
   }
 
+  // If we are connected to a peer BLE Server, update the characteristic each time we are reached with the current time since boot.
   if (connected) {
     pRemoteCharacteristic->writeValue(buff, buffer_length);
   }else if(doScan){
