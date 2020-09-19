@@ -12,6 +12,7 @@
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
+#include <BLE2902.h>
 #include "BLEDevice.h"
 
 #define SERVICE_UUID        "06afc201-1fb5-459e-8fcc-c5c9c331914b"  //this sensors' ID: First 2 digits indicate the sensors' ID 01 = sensor 1
@@ -28,6 +29,11 @@ static boolean doScan = false;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
 static BLEAdvertisedDevice* myDevice;
 
+BLEServer* pServer = NULL;
+BLECharacteristic* pCharacteristic = NULL;
+bool deviceConnected = false;
+bool oldDeviceConnected = false;
+
 static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify) {
     #ifdef DEBUG
       Serial.print("data recieved: ");
@@ -37,6 +43,16 @@ static void notifyCallback(BLERemoteCharacteristic* pBLERemoteCharacteristic, ui
       Serial.println("");
     #endif
 }
+
+class MyServerCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) {
+      deviceConnected = true;
+    };
+
+    void onDisconnect(BLEServer* pServer) {
+      deviceConnected = false;
+    }
+};
 
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient* pclient) {
@@ -112,6 +128,30 @@ void setup() {
   pBLEScan->setWindow(449);
   pBLEScan->setActiveScan(true);
   pBLEScan->start(5, false);
+
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+  pCharacteristic = pService->createCharacteristic(
+                      CHARACTERISTIC_UUID,
+                      BLECharacteristic::PROPERTY_READ   |
+                      BLECharacteristic::PROPERTY_WRITE  |
+                      BLECharacteristic::PROPERTY_NOTIFY |
+                      BLECharacteristic::PROPERTY_INDICATE
+                    );
+                    
+  pCharacteristic->addDescriptor(new BLE2902());
+  pService->start();
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(false);
+  pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
+  BLEDevice::startAdvertising();
+}
+
+void sendData(uint8_t* buff, uint8_t buffer_length){
+  pCharacteristic->setValue(buff, buffer_length);
+  pCharacteristic->notify();
 }
 
 void sendPacket(uint8_t sensor_cid, unsigned long r) {
@@ -127,11 +167,27 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
     memcpy(&buff[i], &result, sizeof(result));
     i+=sizeof(result);
   }
+  sendData(buff, buffer_length);
 }
 
 void loop() {
-  delay(COLLECT_TIME);
-  sendPacket(ULTRASONIC_CID, ultra.get());
+ // notify changed value
+  if (deviceConnected) {
+      sendPacket(ULTRASONIC_CID, ultra.get());
+      delay(10000);
+  }
+  // disconnecting
+  if (!deviceConnected && oldDeviceConnected) {
+      delay(500);
+      pServer->startAdvertising(); // restart advertising
+      oldDeviceConnected = deviceConnected;
+  }
+  // connecting
+  if (deviceConnected && !oldDeviceConnected) {
+      // do stuff here on connecting
+      oldDeviceConnected = deviceConnected;
+  }
+
   
   if (doConnect == true) {
     if (connectToServer()) {
