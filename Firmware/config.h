@@ -9,7 +9,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define UNIQUE_ID 8
+#define UNIQUE_ID 6
 
 #define PIN_ECHO 27
 #define PIN_TRIG 12
