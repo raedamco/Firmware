@@ -8,7 +8,6 @@
 // This file holds code for the UDP communication between the sensors -> server -> database
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 var udp = require('dgram');
 const admin = require('firebase-admin');
 
@@ -16,6 +15,9 @@ let serviceAccount = require('./serverKey.json');
 
 const debug = true;
 var PORT = 15000
+
+//Server bot post to slack
+var slack = require('slack-notify')('https://hooks.slack.com/services/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');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -42,11 +44,6 @@ server.on('message',function(msg, info) {
 
         var SensorID = msg.readUIntLE(0,1);
 
-        // let stringHex = msg.toString('hex');
-        //log(stringHex);
-        // log(msg.readUInt8(4,8));
-        // log("Sensor ID: " + msg.readUInt8(0,1));
-
         var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
         Distance = Distance.toFixed(3);
         Distance = parseFloat(Distance,10);
@@ -67,7 +64,9 @@ server.on('message',function(msg, info) {
         databaseListner();
     }else{
         let stringHex = msg.toString('hex');
-        log("ERROR FORMAT FOUND FROM PACKET RECIEVED WITH LENGTH OF: " + msg.length + " PACKET INFO: " + stringHex);
+        var errorMessage = ("PACKET RECIEVED FUNCTION ERROR. RECIEVED PAKCET WITH LENGTH OF: " + msg.length + ". PACKET INFO: " + stringHex);
+        log(errorMessage);
+        sendSlackBotMessage(errorMessage);
     }
 
 
@@ -287,6 +286,23 @@ function updateStructureInfo(structure, available){
 }
 
 
+function sendSlackBotMessage(errorMessage){
+    slack.send({
+        'username': 'Server Error Bot',
+        'text': '<!channel>',
+        'icon_emoji': ':x:',
+        'attachments': [{
+          'color': '#ff0000',
+          'fields': [
+            {
+                'title': 'ERROR OCCURED IN UDP_SERVER:',
+                'value': errorMessage,
+                'short': false
+            },
+          ]
+        }]
+    })
+}
 
 //Only log when debugging not production
 function log(message) {
