@@ -103,21 +103,6 @@ bool connectToServer() {
     return true;
 }
 
-
-class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice advertisedDevice) {
-    Serial.print("BLE Advertised Device found: ");
-    Serial.println(advertisedDevice.toString().c_str());
-
-    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID)) {
-      BLEDevice::getScan()->stop();
-      myDevice = new BLEAdvertisedDevice(advertisedDevice);
-      doConnect = true;
-      doScan = true;
-    } // Found our server
-  } // onResult
-}; // MyAdvertisedDeviceCallbacks
-
 void setupBLEAdvertising(){
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
@@ -139,19 +124,31 @@ void setupBLEAdvertising(){
   BLEDevice::startAdvertising();
 }
 
-void setupBLEScanning(){
+class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
+
+  void onResult(BLEAdvertisedDevice advertisedDevice) {
+    Serial.print("BLE Advertised Device found: ");
+    Serial.println(advertisedDevice.toString().c_str());
+
+    if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID)) {
+      BLEDevice::getScan()->stop();
+      myDevice = new BLEAdvertisedDevice(advertisedDevice);
+      doConnect = true;
+      doScan = true;
+//      setupBLEAdvertising();
+    } // Found our server
+  } // onResult
+}; // MyAdvertisedDeviceCallbacks
+
+void setup() {
+  Serial.begin(115200);
+  BLEDevice::init("RaedamUnit6");
   BLEScan* pBLEScan = BLEDevice::getScan();
   pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setInterval(1349);
   pBLEScan->setWindow(449);
   pBLEScan->setActiveScan(true);
   pBLEScan->start(5, false);
-}
-
-void setup() {
-  Serial.begin(115200);
-  BLEDevice::init("RaedamUnit6");
-  setupBLEScanning();
 }
 
 void sendData(uint8_t* buff, uint8_t buffer_length){
@@ -194,6 +191,7 @@ void loop() {
       oldDeviceConnected = deviceConnected;
   }
 
+  
   if (doConnect == true) {
     if (connectToServer()) {
       //We are now connected to the BLE Server
@@ -204,7 +202,8 @@ void loop() {
     doConnect = false;
   }
   if (connected) {
-    setupBLEAdvertising();
+//    pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
+
   }else if(doScan){
     BLEDevice::getScan()->start(0);
   }

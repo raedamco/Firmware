@@ -5,12 +5,20 @@
 //  Created on 1/10/2019. Modified on 8/27/2020.
 //  Copyright © 2020 Raedam Inc. All rights reserved.
 //
+#include <WiFi.h>
+#include "AsyncUDP.h"
+AsyncUDP udp;
+
+#ifndef OFFLINE
+#include <WiFiUdp.h>
+#endif OFFLINE
 
 #include "config.h"
 #include "ultrasonic.h"
 #include "namedMesh.h"
 #include "BLEDevice.h"
 
+WiFiUDP socket;
 Scheduler userScheduler;
 namedMesh mesh;
 
@@ -168,12 +176,30 @@ void sendData(uint8_t* buff, uint8_t buffer_length){
   }
 }
 
+void setupWiFi(){
+  // START WIFI CONNECTION //
+  #ifndef OFFLINE   //If NOT Offline Build
+    Serial.printf("SSID: %s\n", WIFI_SSID);
+    
+    #ifdef WIFI_PASS
+      WiFi.begin(WIFI_SSID, WIFI_PASS);
+    #else
+      WiFi.begin(WIFI_SSID);
+    #endif
+ 
+    socket.begin(SERVER_PORT);
+   
+  #endif
+  // END WIFI CONNECTION //
+}
+
 void setup() {
   #ifdef DEBUGGING
     Serial.begin(115200);
   #endif
   setupMesh();
   setupBLE();
+  setupWiFi();
 }
 
 void loop() {
@@ -212,12 +238,21 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
   for(int i=0; i<buffer_length; i++){
       buff[i] = t1[i];
   }
-
-  sendData(buff, buffer_length);
+  
+  socket.beginPacket(SERVER_IP, SERVER_PORT);
+  socket.write(buff, buffer_length);
+  socket.endPacket();
 }
 
 Task taskSendMessage(TASK_SECOND*COLLECT_TIME, TASK_FOREVER, []() { //collect and send every 30 seconds
-    sendPacket(ULTRASONIC_CID, ultra.get());
+    if (WiFi.status() == WL_CONNECTED) {
+      #ifndef OFFLINE   //If NOT Offline Build      
+      sendPacket(ULTRASONIC_CID, ultra.get());
+    }else{
+      Serial.flush(); 
+    }
+    #endif
+   //END DATA SEND
 });
 
 void setupMesh(){
@@ -239,7 +274,9 @@ void setupMesh(){
             buff[i] = messageFromSensor[i];
         }
         
-        sendData(buff,buffer_length);
+        socket.beginPacket(SERVER_IP, SERVER_PORT);
+        socket.write(buff, buffer_length);
+        socket.endPacket();
       });
     
     mesh.onChangedConnections([]() {});

@@ -9,11 +9,17 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define MESH_SSID       "RaedamSSID"
+#define WIFI_SSID "PSU Registered Devices"
+#define WIFI_PASS ""
+
+#define SERVER_IP "35.247.56.47"
+#define SERVER_PORT 15100
+
+#define MESH_SSID       "RaedamSSID-InternalTesting"
 #define MESH_PASSWORD   "RaedamPassword"
 #define MESH_PORT       5555
 
-#define UNIQUE_ID 8
+#define UNIQUE_ID 3
 
 #define PIN_ECHO 27
 #define PIN_TRIG 12

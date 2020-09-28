@@ -13,17 +13,33 @@
 Scheduler userScheduler;
 namedMesh mesh;
 
+String nextNode = NEXT_NODE_ID;
+unsigned long lastUpdate = 0;
+
 ultrasonic ultra = ultrasonic(PIN_TRIG,PIN_ECHO);
 
-String nextNode = NEXT_NODE_ID;
+void setupBLEMesh(){
+    mesh.init(MESH_SSID, MESH_PASSWORD, &userScheduler, MESH_PORT); //initialize ble mesh
+    String NodeName = String(UNIQUE_ID);
+    mesh.setName(NodeName); //assign number to this node
 
-void setup() {
-  Serial.begin(115200);
-  setupBLEMesh();
-}
-
-void loop() {
-  mesh.update(); //run the user scheduler as well
+   //forward the previous msgs to the next node in line
+     mesh.onReceive([](String &from, String &msg) { //ble mesh recieved msg
+       String fromSensor = from.c_str(); //get node number that sent msg
+       String messageFromSensor = msg.c_str(); //msg recieved
+       
+       #ifdef DEBUGGING
+         Serial.println(String("GOT DATA FROM Sensor: " + fromSensor + " Message: " + messageFromSensor)); //log what node sent the info and what the msg was passed along
+       #endif
+      
+       mesh.sendSingle(nextNode, messageFromSensor); //forward recieved msg to next node in chain until it reaches sensor w/ WiFi connection
+    });
+    
+    mesh.onChangedConnections([]() {
+      #ifdef DEBUGGING
+        Serial.printf("Changed connection\n");
+      #endif
+    });
 }
 
 void sendPacket(uint8_t sensor_cid, unsigned long r) {
@@ -61,36 +77,23 @@ void sendPacket(uint8_t sensor_cid, unsigned long r) {
    #endif 
 }
 
-Task taskSendMessage(TASK_SECOND*COLLECT_TIME, TASK_FOREVER, []() { //collect and send every 30 seconds
-  sendPacket(ULTRASONIC_CID, ultra.get());
-});
-
-void setupBLEMesh(){
-    mesh.init(MESH_SSID, MESH_PASSWORD, &userScheduler, MESH_PORT); //initialize ble mesh
-    String NodeName = String(UNIQUE_ID);
-    mesh.setName(NodeName); //assign number to this node
-
-   //forward the previous msgs to the next node in line
-     mesh.onReceive([](String &from, String &msg) { //ble mesh recieved msg
-       String fromSensor = from.c_str(); //get node number that sent msg
-       String messageFromSensor = msg.c_str(); //msg recieved
-       
-       #ifdef DEBUGGING
-         Serial.println(String("GOT DATA FROM Sensor: " + fromSensor + " Message: " + messageFromSensor)); //log what node sent the info and what the msg was passed along
-       #endif
-      
-       mesh.sendSingle(nextNode, messageFromSensor); //forward recieved msg to next node in chain until it reaches sensor w/ WiFi connection
-    });
-    
-    mesh.onChangedConnections([]() {
-      #ifdef DEBUGGING
-        Serial.printf("Changed connection\n");
-      #endif
-    });
-
-    userScheduler.addTask(taskSendMessage); //add task to send msg from this node
-    taskSendMessage.enable(); //enable task to send msg from this node
+void setup() {
+  #ifdef DEBUGGING
+    Serial.begin(115200);
+  #endif
+  setupBLEMesh();
 }
+
+void loop() {
+  mesh.update(); //run the user scheduler as well
+
+  if(millis() - lastUpdate >= COLLECT_TIME){
+      lastUpdate = millis(); //update old_time to current millis()
+      sendPacket(ULTRASONIC_CID, ultra.get());
+  }
+}
+
+
 
 /******Documentation*****
   WiFi                https://www.arduino.cc/en/Reference/WiFi
