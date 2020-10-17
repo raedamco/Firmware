@@ -11,6 +11,7 @@
 //  console.log('disconnected from server');
 //});
 // creating a custom socket client and connecting it....
+var net = require('net');
 var client  = new net.Socket();
 client.connect({
   port:2222
