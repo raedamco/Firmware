@@ -6,7 +6,7 @@ function ModernBuffer(buffer) { // custom buffer class
   this.byteLength = this.buffer.byteLength;
   console.log('ModernBuffer.ByteLength: ' + this.byteLength);
 
-  var Uint16View = new Uint16Array(this.buffer, 0, 1);
+  var Uint16View = new Uint16Array(this.buffer);
 
   for (var i=0; i<Uint16View.length; i++) {
     Uint16View[i] = buffer[i];
