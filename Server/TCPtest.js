@@ -1,18 +1,3 @@
-var net = require('net');
-
-
-function ModernBuffer(buffer) { // custom buffer class
-  this.buffer = new ArrayBuffer(buffer.length);
-  this.byteLength = this.buffer.byteLength;
-  console.log('ModernBuffer.ByteLength: ' + this.byteLength);
-
-  var Uint16View = new Uint16Array(this.buffer);
-
-  for (var i=0; i<Uint16View.length; i++) {
-    Uint16View[i] = buffer[i];
-    console.log("Entry " + i + ": " + Uint16View[i]);
-  }
-}
 
 
 
@@ -80,8 +65,6 @@ socket.on('data',function(data){
   console.log('Bytes read : ' + bread);
   console.log('Bytes written : ' + bwrite);
   console.log('Data sent to server : ' + data);
-  console.log("data type: " + (typeof data));
-  modernBuffer = new ModernBuffer(data);
   //echo data
   var is_kernel_buffer_full = socket.write('Data ::' + data);
   if(is_kernel_buffer_full){

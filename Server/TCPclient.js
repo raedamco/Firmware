@@ -31,9 +31,9 @@ client.on('connect',function(){
 
 
   // writing data to server
-    var test = Buffer.from([0x1,0x10,0x50]);
+
   client.write('hello from client');
-     client.write(test);
+
 
 });
 
