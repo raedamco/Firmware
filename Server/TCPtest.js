@@ -64,7 +64,7 @@ socket.on('data',function(data){
   console.log('Bytes read : ' + bread);
   console.log('Bytes written : ' + bwrite);
   console.log('Data sent to server : ' + data);
-
+  console.log("data type: " + (typeof data));
   //echo data
   var is_kernel_buffer_full = socket.write('Data ::' + data);
   if(is_kernel_buffer_full){
