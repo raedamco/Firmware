@@ -31,7 +31,7 @@ client.on('connect',function(){
 
 
   // writing data to server
-    var test = [1,2,3,4,5,6,7,10,80];
+    var test = new Buffer([1,2,3,4,5,6,7,10,80]);
   client.write('hello from client');
      client.write(test);
 
