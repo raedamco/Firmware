@@ -38,7 +38,27 @@ server.on('message',function(msg, info) {
     var Time = new Date();
     log("---------------------------------------------------------------------------------------------------------------------------------------------");
     log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
-    log("PACKET DATA:" + msg.toString());
+
+    var SensorID = msg.readUIntLE(0,1);
+
+    var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
+    Distance = Distance.toFixed(3);
+    Distance = parseFloat(Distance,10);
+    var OccupiedDistance = 48; //Object is within 4 feet (48in)
+
+    if (Distance <= OccupiedDistance) {
+        var Occupied = true;
+        var Occupant = "";
+    }else{
+        var Occupied = false;
+        var Occupant = "";
+    }
+
+    log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
+
+    appendData(String(SensorID), Occupied, Occupant, Time, Distance);
+    queryDatabase();
+    databaseListner();
 });
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
