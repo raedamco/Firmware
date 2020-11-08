@@ -55,10 +55,10 @@ server.on('message',function(msg, info) {
     }
 
     log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
-
-    appendData(String(SensorID), Occupied, Occupant, Time, Distance);
-    queryDatabase();
-    databaseListner();
+    //
+    // appendData(String(SensorID), Occupied, Occupant, Time, Distance);
+    // queryDatabase();
+    // databaseListner();
 });
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
