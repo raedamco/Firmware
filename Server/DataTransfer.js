@@ -22,7 +22,7 @@ admin.initializeApp({
 
 let db = admin.firestore();
 
-//parent function to move data in firestore database
+//parent function to move data in firestore database     
 // takes in destination path in database first argument
 // takes in source destination to copy from
 function move_data(dest,src)
