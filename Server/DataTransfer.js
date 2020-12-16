@@ -27,6 +27,7 @@ let db = admin.firestore();
 // takes in source destination to copy from
 function move_data(dest,src)
 {
+    // check that dest and srd match doc type (doc or collection)
     src = db.src;
     dest = db.dest;
     grab_data(src); // will return object of class dataHolder that acts as root of tree
@@ -35,9 +36,18 @@ function move_data(dest,src)
 // function copies desination including all sub-documents and stores in data structure that it returns 
 function grab_data(src)
 {
-    // create dataHolder object
+     //determine if src is a doc or collection 
     
-    //determine if src is a doc or collection 
+     var stringSrc = String(src);
+     // true == collection false == doc
+     if(stringSrc.lastIndexOf("collection(") > stringSrc.lastIndexOf("doc("))
+         {
+             log("collection");
+         }
+    else{
+        log("doc")
+    }
+    // create dataHolder object
     
     // if doc for each/ recursive call
     

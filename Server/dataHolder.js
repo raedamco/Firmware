@@ -10,8 +10,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 class dataHolder{
     
-    constructor(doc)
+    constructor(id,doc)
     {
+        this.id;
         this.data = doc;
         this.subDoc = [];
     }
