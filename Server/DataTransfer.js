@@ -60,5 +60,7 @@ function grab_data(src)
     
     
 }
-grab_data(String(collection("PSU").doc("Parking Structure 1")));
-grab_data(String(collection("PSU")));
+let test = collection("PSU").doc("Parking Structure 1");
+let test2 = collection("PSU");
+grab_data(String(test));
+grab_data(String(test2));
