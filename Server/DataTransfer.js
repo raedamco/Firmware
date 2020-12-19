@@ -38,7 +38,7 @@ function grab_data(src)
 {
      //determine if src is a doc or collection 
     
-     var stringSrc = String(src);
+     //var stringSrc = String(src);
      // true == collection false == doc
      if(stringSrc.lastIndexOf("collection(") > stringSrc.lastIndexOf("doc("))
          {
