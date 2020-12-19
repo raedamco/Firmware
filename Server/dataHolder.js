@@ -12,7 +12,7 @@ class dataHolder{
     
     constructor(id,doc)
     {
-        this.id;
+        this.id= id;
         this.data = doc;
         this.subDoc = [];
     }
