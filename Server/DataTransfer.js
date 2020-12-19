@@ -42,10 +42,10 @@ function grab_data(src)
      // true == collection false == doc
      if(stringSrc.lastIndexOf("collection(") > stringSrc.lastIndexOf("doc("))
          {
-             log("collection");
+             console.log("collection");
          }
     else{
-        log("doc");
+        console.log("doc");
     }
     // create dataHolder object
     
