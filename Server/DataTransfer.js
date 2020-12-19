@@ -27,6 +27,9 @@ let db = admin.firestore();
 // takes in source destination to copy from
 function move_data(dest,src)
 {
+    // if the string doesn't work look into array for path and use length ti determine doc or collection 
+    // each index label for doc or collection
+    
     // check that dest and srd match doc type (doc or collection)
    // src = db.src;
     //dest = db.dest;
