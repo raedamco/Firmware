@@ -61,6 +61,6 @@ function grab_data(src)
     
 }
 let test = db.collection("PSU").doc("Parking Structure 1");
-let test2 = dbcollection("PSU");
+let test2 = db.collection("PSU");
 grab_data(String(test));
 grab_data(String(test2));
