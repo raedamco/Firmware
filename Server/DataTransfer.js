@@ -45,7 +45,7 @@ function grab_data(src)
              log("collection");
          }
     else{
-        log("doc")
+        log("doc");
     }
     // create dataHolder object
     
@@ -60,3 +60,5 @@ function grab_data(src)
     
     
 }
+grab_data(collection("PSU").doc("Parking Structure 1"));
+grab_data(collection("PSU"));
