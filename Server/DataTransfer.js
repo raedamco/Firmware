@@ -46,7 +46,7 @@ function grab_data(src)
          }
     else{
         console.log("doc");
-        console.log(stringSrc);
+        console.log(stringSrc.length);
     }
     // create dataHolder object
     
