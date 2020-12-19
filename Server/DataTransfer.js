@@ -28,8 +28,8 @@ let db = admin.firestore();
 function move_data(dest,src)
 {
     // check that dest and srd match doc type (doc or collection)
-    src = db.src;
-    dest = db.dest;
+   // src = db.src;
+    //dest = db.dest;
     grab_data(src); // will return object of class dataHolder that acts as root of tree
 }
 // function that takes in source destination
@@ -60,7 +60,7 @@ function grab_data(src)
     
     
 }
-let test = collection("PSU").doc("Parking Structure 1");
-let test2 = collection("PSU");
+let test = db.collection("PSU").doc("Parking Structure 1");
+let test2 = dbcollection("PSU");
 grab_data(String(test));
 grab_data(String(test2));
