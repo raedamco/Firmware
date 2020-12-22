@@ -58,6 +58,7 @@ function grab_data(src)
                 else{
                        data_path = data_path.doc(src[i]);
                         console.log("doc");
+                     console.log(data_path);
                     }  
          }
    
