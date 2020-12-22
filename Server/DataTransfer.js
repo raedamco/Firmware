@@ -41,16 +41,26 @@ function grab_data(src)
 {
      //determine if src is a doc or collection 
     
-     var stringSrc = src;
+     let data_path;
      // true == collection false == doc
-     if(stringSrc.lastIndexOf("collection(") > stringSrc.lastIndexOf("doc("))
+     for(let i =0; i<src.length; i+=1)
          {
-             console.log("collection");
+             if(i == 0)
+                 {
+                    data_path = db.collection(src[i]);
+                     console.log("collection");
+                 }
+             else if (i %2 == 0)
+                 {
+                     data_path = data_path.collection(src[i]);
+                     console.log("collection");
+                 }
+                else{
+                       data_path = data_path.doc(src[i]);
+                        console.log("doc");
+                    }  
          }
-    else{
-        console.log("doc");
-        console.log(stringSrc.length);
-    }
+   
     // create dataHolder object
     
     
@@ -64,7 +74,7 @@ function grab_data(src)
     
     
 }
-let test = db.collection("PSU").doc("Parking Structure 1");
-let test2 = db.collection("PSU");
-grab_data(String(test));
-grab_data(String(test2));
+let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
+let test2 = ["PSU"]; //db.collection("PSU");
+grab_data(test);
+grab_data(test2);
