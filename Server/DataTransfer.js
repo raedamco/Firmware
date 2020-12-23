@@ -33,14 +33,30 @@ function move_data(dest,src)
     // check that dest and srd match doc type (doc or collection)
    // src = db.src;
     //dest = db.dest;
-    grab_data(src); // will return object of class dataHolder that acts as root of tree
+    let root = grab_data(src); // will return object of class dataHolder that acts as root of tree
 }
 // function that takes in source destination
 // function copies desination including all sub-documents and stores in data structure that it returns 
 function grab_data(src)
 {
-     //determine if src is a doc or collection 
-    
+    let doc = false;
+    let collection = false;
+     //determine if src is a doc or collection      
+     if(src.length == 0)
+         {
+             return console.error("no argument for grab data function");
+             
+         }
+     else if (src.length % 2 == 0)
+         {
+              console.log("doc");
+             doc =true;
+         }
+    else
+        {
+             console.log("collection");
+            collection = true;
+        }
      let data_path;
      // true == collection false == doc
      for(let i =0; i<src.length; i+=1)
@@ -48,28 +64,35 @@ function grab_data(src)
              if(i == 0)
                  {
                     data_path = db.collection(src[i]);
-                     console.log("collection");
+                     //console.log("collection");
                  }
              else if (i %2 == 0)
                  {
                      data_path = data_path.collection(src[i]);
-                     console.log("collection");
+                     //console.log("collection");
                  }
                 else{
                        data_path = data_path.doc(src[i]);
-                        console.log("doc");
+                       // console.log("doc");
                      console.log(data_path);
-                    }  
+                    }             
          }
+    
    
-    // create dataHolder object
+    // create dataHolder object doc
+    if(doc)
+        {
+              
+            // if doc for each/ recursive call
+        }
     
+      // create dataHolder object collection   
+    else 
+        {
+              // if collection for each / recursive call
     
-    // if doc for each/ recursive call
-    
-    
-    // if collection for each / recursive call
-    
+        }
+  
     
     // return object created
     
