@@ -111,7 +111,7 @@ async function doc_grab (data_path)
           temp = [String(temp)];
           console.log(temp);
           await console.log(doc.data().temp);
-          console.log(doc.data().Organization);
+          console.log(doc.data().[ 'Pricing' ]);
           //console.log(doc.data()."Spot Types");
 //            (snapshot => {
 //                snapshot.docs.forEach(doc =>{
