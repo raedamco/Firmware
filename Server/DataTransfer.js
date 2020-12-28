@@ -109,7 +109,7 @@ async function doc_grab (data_path)
           console.log(fields);
           console.log(fields[0]);
           console.log(doc.data().Name);
-          console.log(doc.data()."Spot Types");
+          //console.log(doc.data()."Spot Types");
 //            (snapshot => {
 //                snapshot.docs.forEach(doc =>{
 //               console.log("in first firEach");
