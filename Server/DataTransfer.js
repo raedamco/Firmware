@@ -114,6 +114,11 @@ async function doc_grab (data_path)
           console.log(the_object.Name);
           console.log(the_object[temp]);
           await console.log(doc.data()[temp]);
+          fields.forEach(function(element){
+              console.log(element);
+              console.log(typeof element);
+              console.log(doc.data()[String(element)]);
+          } )
           //console.log(doc.data().[ 'Pricing' ]);
           //console.log(doc.data()."Spot Types");
 //            (snapshot => {
