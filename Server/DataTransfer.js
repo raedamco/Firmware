@@ -105,6 +105,8 @@ async function doc_grab (data_path)
             console.log("is doc in doc");
            const doc =  await data_path.get(); 
            console.log(doc.data());
+          let fields = Object.keys(doc.data());
+          console.log(fields);
 //            (snapshot => {
 //                snapshot.docs.forEach(doc =>{
 //               console.log("in first firEach");
