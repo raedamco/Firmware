@@ -74,7 +74,7 @@ function grab_data(src)
                 else{
                        data_path = data_path.doc(src[i]);
                        // console.log("doc");
-                     console.log(data_path);
+                     
                     }             
          }
     
@@ -82,6 +82,7 @@ function grab_data(src)
     // create dataHolder object doc
     if(doc)
         {
+            console.log(data_path);
             console.log("is doc in doc");
             data_path.get(snapshot => {
                 snapshot.docs.forEach(doc =>{
