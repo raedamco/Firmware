@@ -107,7 +107,7 @@ async function doc_grab (data_path)
            console.log(doc.data());
           let fields = Object.keys(doc.data());
           console.log(fields);
-          let temp = await fields[0];
+          let temp = await fields[2];
           console.log(temp)
           await console.log(doc.data().temp);
           //console.log(doc.data()."Spot Types");
