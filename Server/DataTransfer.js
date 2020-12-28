@@ -115,10 +115,26 @@ async function doc_grab (data_path)
           console.log(the_object[temp]);
           await console.log(doc.data()[temp]);
           fields.forEach(function(element){
-              console.log(element);
+             
               let type_test = doc.data()[String(element)];
-              console.log(typeof type_test);
-              console.log(type_test);
+              let the_type = typeof type_test;
+              //console.log(typeof type_test);
+              if(the_type === 'object' && the_type !== null)
+                  {
+                      let element_fields = Object.keys(type_test);
+                      let element_data = [];
+                      let k = 0;
+                      element_fields.forEach(function(childElement)
+                         {
+                            
+                            element_data.push(type_test[String(childElement)]);
+                            console.log(childElement + ":" + element_data[k]);
+                          k+=1;
+                            // parent elment[this element] = value
+                          // floor 2 [available ] = 8
+                         })
+                  }
+              console.log(element + ": " + type_test + ":" + the_type);
           } )
           //console.log(doc.data().[ 'Pricing' ]);
           //console.log(doc.data()."Spot Types");
