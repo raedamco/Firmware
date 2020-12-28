@@ -114,6 +114,6 @@ function grab_data(src)
     
 }
 let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
-let test2 = ["PSU"]; //db.collection("PSU");
+//let test2 = ["PSU"]; //db.collection("PSU");
 grab_data(test);
 grab_data(test2);
