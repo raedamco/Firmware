@@ -108,8 +108,11 @@ async function doc_grab (data_path)
           let fields = Object.keys(doc.data());
           console.log(fields);
           let temp = await fields[2];
-          temp = [String(temp)];
+          //temp = [String(temp)];
           console.log(temp);
+          let the_object = doc.data();
+          console.log(the_object.Name);
+          console.log(the_object.temp);
           await console.log(doc.data().temp);
           //console.log(doc.data().[ 'Pricing' ]);
           //console.log(doc.data()."Spot Types");
