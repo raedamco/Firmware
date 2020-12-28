@@ -108,8 +108,9 @@ async function doc_grab (data_path)
           let fields = Object.keys(doc.data());
           console.log(fields);
           let temp = await fields[2];
-          console.log(temp)
+          console.log(temp);
           await console.log(doc.data().temp);
+          console.log(doc.data().organization);
           //console.log(doc.data()."Spot Types");
 //            (snapshot => {
 //                snapshot.docs.forEach(doc =>{
