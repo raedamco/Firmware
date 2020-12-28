@@ -82,6 +82,21 @@ function grab_data(src)
     // create dataHolder object doc
     if(doc)
         {
+            console.log("is doc in doc");
+            data_path.get(snapshot => {
+                snapshot.docs.forEach(doc =>{
+               let fields = Object.keys(doc.data());
+               let data_array= [];
+               let i = 0;
+               fields.forEach(element => data_array.push(doc.data().element) )
+                    console.log(data_array[i]);
+                    i +=1;
+                        
+                    
+                
+             })
+                
+            })
               
             // if doc for each/ recursive call
         }
