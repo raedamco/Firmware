@@ -85,10 +85,13 @@ function grab_data(src)
             console.log("is doc in doc");
             data_path.get(snapshot => {
                 snapshot.docs.forEach(doc =>{
+               console.log("in first firEach");
                let fields = Object.keys(doc.data());
+               console.log("field test: " + fields[i]);
                let data_array= [];
                let i = 0;
                fields.forEach(element => data_array.push(doc.data().element) )
+                    console.log("seconf for each");
                     console.log(data_array[i]);
                     i +=1;
                         
