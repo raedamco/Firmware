@@ -108,6 +108,7 @@ async function doc_grab (data_path)
           let fields = Object.keys(doc.data());
           console.log(fields);
           let temp = await fields[2];
+          temp = [String(temp)];
           console.log(temp);
           await console.log(doc.data().temp);
           console.log(doc.data().Organization);
