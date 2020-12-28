@@ -82,25 +82,7 @@ function grab_data(src)
     // create dataHolder object doc
     if(doc)
         {
-            console.log(data_path);
-            console.log("is doc in doc");
-            data_path.get(snapshot => {
-                snapshot.docs.forEach(doc =>{
-               console.log("in first firEach");
-               let fields = Object.keys(doc.data());
-               console.log("field test: " + fields[i]);
-               let data_array= [];
-               let i = 0;
-               fields.forEach(element => data_array.push(doc.data().element) )
-                    console.log("seconf for each");
-                    console.log(data_array[i]);
-                    i +=1;
-                        
-                    
-                
-             })
-                
-            })
+           doc_grab(data_path);
               
             // if doc for each/ recursive call
         }
@@ -116,6 +98,30 @@ function grab_data(src)
     // return object created
     
     
+}
+async function doc_grab (data_path)
+{
+     console.log(data_path);
+            console.log("is doc in doc");
+           const doc =  await data_path.get(); 
+           console.log(doc.data());
+//            (snapshot => {
+//                snapshot.docs.forEach(doc =>{
+//               console.log("in first firEach");
+//               let fields = Object.keys(doc.data());
+//               console.log("field test: " + fields[i]);
+//               let data_array= [];
+//               let i = 0;
+//               fields.forEach(element => data_array.push(doc.data().element) )
+//                    console.log("seconf for each");
+//                    console.log(data_array[i]);
+//                    i +=1;
+//                        
+//                    
+//                
+//             })
+//                
+//            })
 }
 let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
 //let test2 = ["PSU"]; //db.collection("PSU");
