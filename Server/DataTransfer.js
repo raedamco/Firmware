@@ -113,7 +113,7 @@ async function doc_grab (data_path)
           });
            doc_info.push(collections_ids);
            console.log(collections_ids);
-           
+           console.log(doc_info);
 
         
 }
