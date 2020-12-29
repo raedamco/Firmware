@@ -131,7 +131,7 @@ async function doc_grab (data_path)
 async function collection_grab(data_path)
 {
     const collection = await data_path.get();
-    let temp = collection.docs.map;
+    let temp = collection.docs;//.map;
     console.log(typeof temp);
 //    temp.forEach(docs => {
 //        console.log("doc: " + doc + "Data: " + doc.data());
