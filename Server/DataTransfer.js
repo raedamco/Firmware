@@ -132,9 +132,10 @@ async function collection_grab(data_path)
 {
     const collection = await data_path.get();
     let temp = collection.docs.map;
-    temp.forEach(docs => {
-        console.log("doc: " + doc + "Data: " + doc.data());
-    });
+    console.log(typeof temp);
+//    temp.forEach(docs => {
+//        console.log("doc: " + doc + "Data: " + doc.data());
+//    });
     //console.log(temp);
 }
 // child = element_fields parent type_test
