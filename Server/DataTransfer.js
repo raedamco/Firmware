@@ -108,6 +108,7 @@ async function doc_grab (data_path)
            doc_info.push(data);
            const collections = await data_path.listCollections();
            doc_info.push(collections);
+           console.log(collections);
            
 
         
