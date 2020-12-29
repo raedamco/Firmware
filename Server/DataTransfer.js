@@ -2,7 +2,7 @@
 //  DataTransfer.js
 //  Raedam 
 //
-//  Created on 12/11/2020. Modified on 12/11/2020 by Austin Mckee.
+//  Created on 12/11/2020. Modified on 12/28/2020 by Austin Mckee.
 //  Copyright © 2020 Raedam. All rights reserved.
 //
 // This file holds code for transfering data in the firestore from one document to another and all sub documents
@@ -11,6 +11,7 @@
 
 const cron = require('node-cron')
 const admin = require('firebase-admin');
+const dataHolder = require("./dataHolder.js");
 
 let serviceAccount = require('./serverKey.json');
 
@@ -81,7 +82,7 @@ function grab_data(src)
    
     // create dataHolder object doc
     if(doc)
-        {
+        { 
            let doc_info = doc_grab(data_path); // doc_info 0 = data 1= subcollections
             let root = new dataHolder(src[src.length-1],doc_info[0]);
             console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
