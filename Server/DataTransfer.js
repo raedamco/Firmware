@@ -132,7 +132,10 @@ async function collection_grab(data_path)
 {
     const collection = await data_path.get();
     let temp = collection.docs.map;
-    console.log(temp);
+    temp.forEach(docs => {
+        console.log("doc: " + doc + "Data: " + doc.data());
+    });
+    //console.log(temp);
 }
 // child = element_fields parent type_test
 // recursive return "new" type test if another object below 
