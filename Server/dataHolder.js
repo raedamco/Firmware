@@ -12,8 +12,8 @@ class dataHolder{
     
     constructor(id,doc)
     {
-        this.id= id;
-        this.data = doc;
-        this.subDoc = [];
+        this.id= id; // holds id for object doc/collection name
+        this.data = doc; // object holding doc.data() 
+        this.subDoc = []; // holds subcollection or docs
     }
 }  

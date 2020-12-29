@@ -101,60 +101,48 @@ function grab_data(src)
 }
 async function doc_grab (data_path)
 {
-     console.log(data_path);
-            console.log("is doc in doc");
+   
            const doc =  await data_path.get(); 
-           console.log(doc.data());
-          let fields = Object.keys(doc.data());
-          console.log(fields);
-          let temp = await fields[2];
-          temp = String(temp);
-          console.log(temp);
-          let the_object = doc.data();
-          console.log(the_object.Name);
-          console.log(the_object[temp]);
-          await console.log(doc.data()[temp]);
-          fields.forEach(function(element){
-             
-              let type_test = doc.data()[String(element)];
-              let the_type = typeof type_test;
-              //console.log(typeof type_test);
-              if(the_type === 'object' && the_type !== null)
-                  {
-                      let element_fields = Object.keys(type_test);
-                      let element_data = [];
-                      let k = 0;
-                      element_fields.forEach(function(childElement)
-                         {
-                            
-                            element_data.push(type_test[String(childElement)]);
-                            console.log(childElement + ":" + element_data[k]);
-                          k+=1;
-                            // parent elment[this element] = value
-                          // floor 2 [available ] = 8
-                         })
-                  }
-              console.log(element + ": " + type_test + ":" + the_type);
-          } )
-          //console.log(doc.data().[ 'Pricing' ]);
-          //console.log(doc.data()."Spot Types");
-//            (snapshot => {
-//                snapshot.docs.forEach(doc =>{
-//               console.log("in first firEach");
-//               let fields = Object.keys(doc.data());
-//               console.log("field test: " + fields[i]);
-//               let data_array= [];
-//               let i = 0;
-//               fields.forEach(element => data_array.push(doc.data().element) )
-//                    console.log("seconf for each");
-//                    console.log(data_array[i]);
-//                    i +=1;
-//                        
-//                    
-//                
-//             })
-//                
-//            })
+           let doc_info = [];
+           let data = doc.data();
+           doc_info.push(data);
+           const collections = await data_path.listCollections();
+           doc_info.push(collections);
+           
+
+        
+}
+// child = element_fields parent type_test
+// recursive return "new" type test if another object below 
+// probably used more for copy data
+function element_grab()
+{
+    //          let fields = Object.keys(doc.data());
+//          console.log(fields);
+//          await console.log(doc.data()[temp]);
+//          fields.forEach(function(element){
+//             
+//              let type_test = doc.data()[String(element)];
+//              let the_type = typeof type_test;
+//              //console.log(typeof type_test);
+//              if(the_type === 'object' && the_type !== null)
+//                  {
+//                      let element_fields = Object.keys(type_test);
+//                      let element_data = [];
+//                      let k = 0;
+//                      element_fields.forEach(function(childElement)
+//                         {
+//                            
+//                            element_data.push(type_test[String(childElement)]);
+//                            console.log(childElement + ":" + element_data[k]);
+//                          k+=1;
+//                            // parent elment[this element] = value
+//                          // floor 2 [available ] = 8
+//                         })
+//                  }
+//              console.log(element + ": " + type_test + ":" + the_type);
+//          } )
+    
 }
 let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
 //let test2 = ["PSU"]; //db.collection("PSU");
