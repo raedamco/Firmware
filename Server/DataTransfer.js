@@ -86,9 +86,10 @@ async function grab_data(src)
         { 
            let doc_info = await doc_grab(data_path); // doc_info 0 = data 1= subcollections
             let root = new dataHold.dataHolder(src[src.length-1],doc_info[0]);
-            console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
+            //console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
             let sub_collections = await doc_info[1];
             sub_collections.forEach(collection => {
+                console.log("Pre call SRC:" + src);
              root.subDoc.push(grab_data(src.push(collection)));
           });
             return root;
@@ -123,7 +124,7 @@ async function doc_grab (data_path)
           });
            doc_info.push(collections_ids);
            
-           console.log(doc_info);
+          // console.log(doc_info);
            return doc_info;
 }
 async function collection_grab(data_path)
