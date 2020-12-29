@@ -89,8 +89,9 @@ async function grab_data(src)
             //console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
             let sub_collections = await doc_info[1];
             sub_collections.forEach(collection => {
+                 src.push(collection);
                 console.log("Pre call SRC:" + src);
-             root.subDoc.push(grab_data(src.push(collection)));
+             root.subDoc.push(grab_data(src));
           });
             return root;
             // if doc for each/ recursive call
