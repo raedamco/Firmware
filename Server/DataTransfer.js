@@ -127,7 +127,7 @@ async function doc_grab (data_path)
 }
 async function collection_grab(data_path)
 {
-    const collection = await data_path.get();
+    const collection = await data_path;
     console.log(collection);
 }
 // child = element_fields parent type_test
