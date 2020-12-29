@@ -50,7 +50,7 @@ async function grab_data(src)
          }
      else if (src.length % 2 == 0)
          {
-              //console.log("doc");
+              console.log("doc");
              doc =true;
          }
     else
@@ -86,6 +86,11 @@ async function grab_data(src)
            let doc_info = await doc_grab(data_path); // doc_info 0 = data 1= subcollections
             let root = new dataHold.dataHolder(src[src.length-1],doc_info[0]);
             console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
+            let sub_collections = await doc_info[1];
+            sub_collections.forEach(collection => {
+             root.subDoc.push(grab_data(src.push(collection)));
+          });
+            return root;
             // if doc for each/ recursive call
         }
     
