@@ -107,8 +107,12 @@ async function doc_grab (data_path)
            let data = doc.data();
            doc_info.push(data);
            const collections = await data_path.listCollections();
-           doc_info.push(collections);
-           console.log(collections);
+           let collections_ids = [];
+          collections.forEach(collection => {
+             collections_ids.push(collection.id);
+          });
+           doc_info.push(collections_ids);
+           console.log(collections_ids);
            
 
         
