@@ -50,7 +50,7 @@ function grab_data(src)
          }
      else if (src.length % 2 == 0)
          {
-              console.log("doc");
+              //console.log("doc");
              doc =true;
          }
     else
@@ -116,7 +116,7 @@ async function doc_grab (data_path)
           });
            doc_info.push(collections_ids);
            
-
+           console.log(doc_info);
            return doc_info;
 }
 // child = element_fields parent type_test
