@@ -38,7 +38,7 @@ function move_data(dest,src)
 }
 // function that takes in source destination
 // function copies desination including all sub-documents and stores in data structure that it returns 
-function grab_data(src)
+async function grab_data(src)
 {
     let doc = false;
     let collection = false;
@@ -83,7 +83,7 @@ function grab_data(src)
     // create dataHolder object doc
     if(doc)
         { 
-           let doc_info = doc_grab(data_path); // doc_info 0 = data 1= subcollections
+           let doc_info = await doc_grab(data_path); // doc_info 0 = data 1= subcollections
             let root = new dataHold.dataHolder(src[src.length-1],doc_info[0]);
             console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
             // if doc for each/ recursive call
