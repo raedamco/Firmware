@@ -97,6 +97,7 @@ async function grab_data(src)
       // create dataHolder object collection   
     else 
         {
+            let collection_info = await collection_grab(data_path);
               // if collection for each / recursive call
     
         }
@@ -123,6 +124,11 @@ async function doc_grab (data_path)
            
            console.log(doc_info);
            return doc_info;
+}
+async function collection_grab(data_path)
+{
+    const collection = await data_path.get();
+    console.log(collection);
 }
 // child = element_fields parent type_test
 // recursive return "new" type test if another object below 
