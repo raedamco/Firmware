@@ -11,7 +11,7 @@
 
 const cron = require('node-cron')
 const admin = require('firebase-admin');
-const dataHolder = require("./dataHolder.js");
+const dataHold = require("./dataHolder.js");
 
 let serviceAccount = require('./serverKey.json');
 
@@ -84,7 +84,7 @@ function grab_data(src)
     if(doc)
         { 
            let doc_info = doc_grab(data_path); // doc_info 0 = data 1= subcollections
-            let root = new dataHolder(src[src.length-1],doc_info[0]);
+            let root = new dataHold.dataHolder(src[src.length-1],doc_info[0]);
             console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
             // if doc for each/ recursive call
         }
