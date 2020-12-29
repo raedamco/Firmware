@@ -82,8 +82,9 @@ function grab_data(src)
     // create dataHolder object doc
     if(doc)
         {
-           doc_grab(data_path);
-              
+           let doc_info = doc_grab(data_path); // doc_info 0 = data 1= subcollections
+            let root = new dataHolder(src[src.length-1],doc_info[0]);
+            console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
             // if doc for each/ recursive call
         }
     
@@ -101,21 +102,21 @@ function grab_data(src)
 }
 async function doc_grab (data_path)
 {
-   
+          // gets data for given doc and stores in doc_info array
            const doc =  await data_path.get(); 
            let doc_info = [];
            let data = doc.data();
            doc_info.push(data);
+           // grabs all subcollections of given doc and stores in doc_info in collections_ids array
            const collections = await data_path.listCollections();
            let collections_ids = [];
           collections.forEach(collection => {
              collections_ids.push(collection.id);
           });
            doc_info.push(collections_ids);
-           console.log(collections_ids);
-           console.log(doc_info);
+           
 
-        
+           return doc_info;
 }
 // child = element_fields parent type_test
 // recursive return "new" type test if another object below 
