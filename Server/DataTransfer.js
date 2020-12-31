@@ -147,9 +147,9 @@ async function collection_grab(data_path)
         let docObj = {Data: theDoc.data(), ['id']: currentID}
         subDocs.push(currentID);
     })       
-        
+        console.log("pre return : " + subDocs[1]);    
     })
-          console.log("pre return : " + subDocs[1]);               
+                     
     return await subDocs;
 //    let temp = collection.docs;//.map;
   //  console.log( temp);
