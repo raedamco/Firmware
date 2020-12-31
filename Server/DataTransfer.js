@@ -148,7 +148,7 @@ async function collection_grab(data_path)
         
     })
                    
-    return subDocs;
+    return await subDocs;
 //    let temp = collection.docs;//.map;
   //  console.log( temp);
 //    temp.forEach(docs => {
