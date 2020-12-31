@@ -256,6 +256,10 @@ function element_grab(root)
 }
 let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
 //let test2 = ["PSU"]; //db.collection("PSU");
-let root =await  grab_data(test);
+async function test_function()
+{
+    let root =await  grab_data(test);
 element_grab(root);
+}
+test_function();
 //grab_data(test2);
