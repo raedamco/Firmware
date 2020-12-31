@@ -40,7 +40,7 @@ function move_data(dest,src)
 // function copies desination including all sub-documents and stores in data structure that it returns 
 async function grab_data(src)
 {
-    console.log("SRC: " +src);
+    console.log("Grabing data from: " +src);
     let doc = false;
     let collection = false;
      //determine if src is a doc or collection      
@@ -87,6 +87,7 @@ async function grab_data(src)
            let doc_info = await doc_grab(data_path); // doc_info 0 = data 1= subcollections
             let root = new dataHold.dataHolder(src[src.length-1],doc_info[0]);
             //console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
+                 // if doc for each/ recursive call
             let sub_collections = await doc_info[1];
             sub_collections.forEach(collection => {
                  let temp = [];
@@ -94,11 +95,12 @@ async function grab_data(src)
                     temp.push(level);
                 })
                  temp.push(collection);
-                console.log("Pre call Temp:" + temp);
+                //console.log("Pre call Temp:" + temp);
              root.subDoc.push(grab_data(temp));
           });
+             // return object created
             return root;
-            // if doc for each/ recursive call
+       
         }
     
       // create dataHolder object collection   
@@ -106,23 +108,24 @@ async function grab_data(src)
         {
             let collection_info = await collection_grab(data_path);
              let root = new dataHold.dataHolder(src[src.length-1],null);
+            // if collection for each / recursive call
             collection_info.forEach(subDoc =>{
                 let temp = [];
                 src.forEach(level => {
                     temp.push(level);
                 })
                 temp.push(subDoc);
-                console.log("pre call temp: " + temp);
+                //console.log("pre call temp: " + temp);
                 root.subDoc.push(grab_data(temp));
                  //console.log("For each ID: "+ subDoc);
             });
-           
-              // if collection for each / recursive call
+            // return object created
+              return root;
     
         }
   
     
-    // return object created
+   
     
     
 }
