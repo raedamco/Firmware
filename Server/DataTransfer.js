@@ -95,7 +95,7 @@ async function grab_data(src)
                 })
                  temp.push(collection);
                 //console.log("Pre call Temp:" + temp);
-             root.subDoc.push(grab_data(temp));
+             root.subDoc.push(await grab_data(temp));
           });
              // return object created
             return root;
@@ -115,7 +115,7 @@ async function grab_data(src)
                 })
                 temp.push(subDoc);
                 //console.log("pre call temp: " + temp);
-                root.subDoc.push(grab_data(temp));
+                root.subDoc.push(await grab_data(temp));
                  //console.log("For each ID: "+ subDoc);
             });
             // return object created
