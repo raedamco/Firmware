@@ -133,7 +133,7 @@ async function collection_grab(data_path)
 {
     const collection = await data_path.get();
     const subDocs = []; 
-    collection.then(snapshot => {
+  data_path.get().then(snapshot => {
          snapshot.docs.forEach(theDoc =>{
         let currentID = theDoc.id;
         console.log("ID" +  currentID);
