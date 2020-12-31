@@ -95,7 +95,8 @@ async function grab_data(src)
                 })
                  temp.push(collection);
                 //console.log("Pre call Temp:" + temp);
-                let sub = await grab_data(temp)
+                 let sub =grab_data(temp)
+                  console.log(sub);
              root.subDoc.push(sub);
           });
              // return object created
@@ -116,7 +117,8 @@ async function grab_data(src)
                 })
                 temp.push(subDoc);
                 //console.log("pre call temp: " + temp);
-                  let sub = await grab_data(temp)
+                  let sub =grab_data(temp)
+                  console.log(sub);
              root.subDoc.push(sub);
                  //console.log("For each ID: "+ subDoc);
             });
