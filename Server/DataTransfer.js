@@ -230,8 +230,8 @@ function element_grab(root)
 {
              let fields = Object.keys(root.data);
           console.log(fields);
-          db.collection('data-test-dest').doc('1').set(root.data);
-         db.collection('data-test-dest').doc('1').add(root.subDoc[0].id);
+          //db.collection('data-test-dest').doc('1').set(root.data);
+        console.log(root.subDoc[0].id);
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
 //             
