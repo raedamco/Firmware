@@ -204,11 +204,12 @@ function copy_data(root,dest)
     // call correct function based of type // roots id not copied not copied subdocs copied
     if(doc === true)
         {
-             // call element grab to write all doc.data() for self
-         let field_keys =  element_grab(root); // return array of field keys
-            // for each field key write to doc
-            
+            data_path.set(root.data);
             // for each sub collection 
+             root.subDoc.forEach(subcollection =>{
+                 
+                 
+             })
             // write sub collection names to doc 
                
             // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
@@ -230,6 +231,7 @@ function element_grab(root)
              let fields = Object.keys(root.data);
           console.log(fields);
           db.collection('data-test-dest').doc('1').set(root.data);
+         db.collection('data-test-dest').doc('1').add(root.subDoc[0]);
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
 //             
