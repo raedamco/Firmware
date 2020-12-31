@@ -229,6 +229,7 @@ function element_grab(root)
 {
              let fields = Object.keys(root.data);
           console.log(fields);
+          db.collection('data-test-dest').doc('1').set(root.data);
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
 //             
