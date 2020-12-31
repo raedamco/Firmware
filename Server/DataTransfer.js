@@ -103,7 +103,7 @@ async function grab_data(src)
             let collection_info = await collection_grab(data_path);
             console.log("post return "+ collection_info[1]);
             collection_info.forEach(subDoc =>{
-                 console.log("For each ID: "+ subdoc.id);
+                 console.log("For each ID: "+ subDoc.id);
             });
            
               // if collection for each / recursive call
