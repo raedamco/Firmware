@@ -148,9 +148,10 @@ async function collection_grab(data_path)
         subDocs.push(currentID);
     })       
         console.log("pre return : " + subDocs[1]);    
+      return await subDocs;
     })
                      
-    return await subDocs;
+    
 //    let temp = collection.docs;//.map;
   //  console.log( temp);
 //    temp.forEach(docs => {
