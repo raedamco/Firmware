@@ -103,7 +103,7 @@ async function grab_data(src)
             let collection_info = await collection_grab(data_path);
             console.log("post return "+ collection_info[1]);
             collection_info.forEach(subDoc =>{
-                 console.log("For each ID: "+ subDoc.id);
+                 console.log("For each ID: "+ subDoc);
             });
            
               // if collection for each / recursive call
@@ -142,23 +142,13 @@ async function collection_grab(data_path)
   let test = data_path.get().then(snapshot => {
          snapshot.docs.forEach(theDoc =>{
         let currentID = theDoc.id;
-       // console.log("ID" +  currentID);
-      //  console.log("Data: " +  theDoc.data());
-        let docObj = {Data: theDoc.data(), ['id']: currentID}
-        subDocs.push(docObj);
-        //console.log(subDocs);
+        subDocs.push(currentID);
     })       
         console.log("pre return : " + subDocs[1]);    
       return  subDocs;
     })
-      //console.log("Test" +await test);              
+                
        return await test;
-//    let temp = collection.docs;//.map;
-  //  console.log( temp);
-//    temp.forEach(docs => {
-//        console.log("doc: " + doc + "Data: " + doc.data());
-//    });
-    //console.log(temp);
 }
 // child = element_fields parent type_test
 // recursive return "new" type test if another object below 
