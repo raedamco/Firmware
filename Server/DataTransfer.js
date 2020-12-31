@@ -101,6 +101,10 @@ async function grab_data(src)
     else 
         {
             let collection_info = await collection_grab(data_path);
+            collection_info.forEach(subDoc =>{
+                 console.log("For each ID: "+ subdoc.id);
+            })
+           
               // if collection for each / recursive call
     
         }
@@ -131,13 +135,13 @@ async function doc_grab (data_path)
 //gets all subdocuments from a collection and returns them as an array 
 async function collection_grab(data_path)
 {
-    const collection = await data_path.get();
+    
     const subDocs = []; 
   data_path.get().then(snapshot => {
          snapshot.docs.forEach(theDoc =>{
         let currentID = theDoc.id;
-        console.log("ID" +  currentID);
-        console.log("Data: " +  theDoc.data());
+       // console.log("ID" +  currentID);
+      //  console.log("Data: " +  theDoc.data());
         let docObj = {Data: theDoc.data(), ['id']: currentID}
         subDocs.push(docObj);
     })       
