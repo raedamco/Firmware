@@ -145,10 +145,10 @@ async function collection_grab(data_path)
         let docObj = {Data: theDoc.data(), ['id']: currentID}
         subDocs.push(docObj);
     })       
-        return subDocs;
+        
     })
                    
-    
+    return subDocs;
 //    let temp = collection.docs;//.map;
   //  console.log( temp);
 //    temp.forEach(docs => {
