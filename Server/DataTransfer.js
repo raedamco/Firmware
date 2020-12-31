@@ -101,10 +101,10 @@ async function grab_data(src)
     else 
         {
             let collection_info = await collection_grab(data_path);
-//            console.log("post return "+ collection_info[1]);
-//            collection_info.forEach(subDoc =>{
-//                 console.log("For each ID: "+ subdoc.id);
-//            });
+            console.log("post return "+ collection_info[1]);
+            collection_info.forEach(subDoc =>{
+                 console.log("For each ID: "+ subdoc.id);
+            });
            
               // if collection for each / recursive call
     
@@ -145,14 +145,14 @@ async function collection_grab(data_path)
        // console.log("ID" +  currentID);
       //  console.log("Data: " +  theDoc.data());
         let docObj = {Data: theDoc.data(), ['id']: currentID}
-        subDocs.push(currentID);
-        console.log(subDocs);
+        subDocs.push(docObj);
+        //console.log(subDocs);
     })       
         console.log("pre return : " + subDocs[1]);    
       return  subDocs;
     })
-      console.log("Test" +await test);              
- 
+      //console.log("Test" +await test);              
+       return test;
 //    let temp = collection.docs;//.map;
   //  console.log( temp);
 //    temp.forEach(docs => {
