@@ -101,9 +101,10 @@ async function grab_data(src)
     else 
         {
             let collection_info = await collection_grab(data_path);
+            console.log("post return "+ collection_info[1]);
             collection_info.forEach(subDoc =>{
                  console.log("For each ID: "+ subdoc.id);
-            })
+            });
            
               // if collection for each / recursive call
     
@@ -130,6 +131,7 @@ async function doc_grab (data_path)
            doc_info.push(collections_ids);
            
           // console.log(doc_info);
+     
            return doc_info;
 }
 //gets all subdocuments from a collection and returns them as an array 
@@ -147,7 +149,7 @@ async function collection_grab(data_path)
     })       
         
     })
-                   
+          console.log("pre return : " + subDocs[1]);               
     return await subDocs;
 //    let temp = collection.docs;//.map;
   //  console.log( temp);
