@@ -128,11 +128,25 @@ async function doc_grab (data_path)
           // console.log(doc_info);
            return doc_info;
 }
+//gets all subdocuments from a collection and returns them as an array 
 async function collection_grab(data_path)
 {
     const collection = await data_path.get();
-    let temp = collection.docs;//.map;
-    console.log( temp);
+    const subDocs = []; 
+    collection.then(snapshot => {
+         snapshot.docs.forEach(theDoc =>{
+        let currentID = theDoc.id;
+        console.log("ID" + await currentID);
+        console.log("Data: " + await theDoc.data());
+        let docObj = {Data: theDoc.data(), ['id']: currentID}
+        subDocs.push(docObj);
+    })       
+        return subDocs;
+    })
+                   
+    
+//    let temp = collection.docs;//.map;
+  //  console.log( temp);
 //    temp.forEach(docs => {
 //        console.log("doc: " + doc + "Data: " + doc.data());
 //    });
