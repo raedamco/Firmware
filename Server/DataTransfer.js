@@ -30,9 +30,10 @@ function move_data(dest,src)
 {
   
     
-    // check that dest and srd match doc type (doc or collection)
+    // check that dest and src match doc type (doc or collection)
     let root = grab_data(src); // will return object of class dataHolder that acts as root of tree
-    copy_data(root,dest)
+    element_grab(root);
+    //copy_data(root,dest)
 }
 // function that takes in source destination
 // function copies desination including all sub-documents and stores in data structure that it returns 
@@ -200,18 +201,23 @@ function copy_data(root,dest)
          }
       
     
-    // call correct function based of type
+    // call correct function based of type // roots id not copied not copied subdocs copied
     if(doc === true)
         {
+             // call element grab to write all doc.data() for self
+         let field_keys =  element_grab(root); // return array of field keys
+            // for each field key write to doc
+            
             // for each sub collection 
             // write sub collection names to doc 
+               
             // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
         }
-    else if (collection === true)
+    else if (collection === true) 
     {
         // for each sub doc 
         // write sub doc name(id) to collection 
-        // call element grab to write all doc.data() 
+    
       // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
         
     }
@@ -219,10 +225,10 @@ function copy_data(root,dest)
 // child = element_fields parent type_test
 // recursive return "new" type test if another object below 
 // probably used more for copy data
-function element_grab()
+function element_grab(root)
 {
-    //          let fields = Object.keys(doc.data());
-//          console.log(fields);
+              let fields = Object.keys(root.data);
+          console.log(fields);
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
 //             
@@ -246,7 +252,7 @@ function element_grab()
 //                  }
 //              console.log(element + ": " + type_test + ":" + the_type);
 //          } )
-    
+//    
 }
 let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
 //let test2 = ["PSU"]; //db.collection("PSU");
