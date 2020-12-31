@@ -151,7 +151,7 @@ async function collection_grab(data_path)
         console.log("pre return : " + subDocs[1]);    
       return  subDocs;
     })
-      console.log("Test" +test);              
+      console.log("Test" +await test);              
  
 //    let temp = collection.docs;//.map;
   //  console.log( temp);
