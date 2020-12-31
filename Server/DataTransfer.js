@@ -136,8 +136,8 @@ async function collection_grab(data_path)
     collection.then(snapshot => {
          snapshot.docs.forEach(theDoc =>{
         let currentID = theDoc.id;
-        console.log("ID" + await currentID);
-        console.log("Data: " + await theDoc.data());
+        console.log("ID" +  currentID);
+        console.log("Data: " +  theDoc.data());
         let docObj = {Data: theDoc.data(), ['id']: currentID}
         subDocs.push(docObj);
     })       
