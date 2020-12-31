@@ -101,10 +101,10 @@ async function grab_data(src)
     else 
         {
             let collection_info = await collection_grab(data_path);
-            console.log("post return "+ collection_info[1]);
-            collection_info.forEach(subDoc =>{
-                 console.log("For each ID: "+ subdoc.id);
-            });
+//            console.log("post return "+ collection_info[1]);
+//            collection_info.forEach(subDoc =>{
+//                 console.log("For each ID: "+ subdoc.id);
+//            });
            
               // if collection for each / recursive call
     
@@ -139,7 +139,7 @@ async function collection_grab(data_path)
 {
     
     const subDocs = []; 
-  data_path.get().then(snapshot => {
+  let test = data_path.get().then(snapshot => {
          snapshot.docs.forEach(theDoc =>{
         let currentID = theDoc.id;
        // console.log("ID" +  currentID);
@@ -151,7 +151,7 @@ async function collection_grab(data_path)
         console.log("pre return : " + subDocs[1]);    
       return  subDocs;
     })
-                     
+      console.log("Test" +test);              
  
 //    let temp = collection.docs;//.map;
   //  console.log( temp);
