@@ -145,7 +145,7 @@ async function collection_grab(data_path)
        // console.log("ID" +  currentID);
       //  console.log("Data: " +  theDoc.data());
         let docObj = {Data: theDoc.data(), ['id']: currentID}
-        subDocs.push(docObj);
+        subDocs.push(currentID);
     })       
         
     })
