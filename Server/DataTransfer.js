@@ -101,9 +101,12 @@ async function grab_data(src)
     else 
         {
             let collection_info = await collection_grab(data_path);
-            console.log("post return "+ collection_info[1]);
+             let root = new dataHold.dataHolder(src[src.length-1],null);
             collection_info.forEach(subDoc =>{
-                 console.log("For each ID: "+ subDoc);
+                src.push(subDoc);
+                console.log("pre call SRC: " + src);
+                root.subDoc.push(grab_data(src));
+                 //console.log("For each ID: "+ subDoc);
             });
            
               // if collection for each / recursive call
