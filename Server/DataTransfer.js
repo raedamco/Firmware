@@ -39,7 +39,7 @@ function move_data(dest,src)
 // function copies desination including all sub-documents and stores in data structure that it returns 
 async function grab_data(src)
 {
-    console.log("Grabing data from: " +src);
+    //console.log("Grabing data from: " +src);
     let doc = false;
     let collection = false;
      //determine if src is a doc or collection      
