@@ -89,10 +89,13 @@ async function grab_data(src)
             //console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
             let sub_collections = await doc_info[1];
             sub_collections.forEach(collection => {
-                let temp = src;
+                 let temp = [];
+                src.forEach(level => {
+                    temp.push(level);
+                })
                  temp.push(collection);
-                console.log("Pre call SRC:" + src);
-             root.subDoc.push(grab_data(src));
+                console.log("Pre call Temp:" + temp);
+             root.subDoc.push(grab_data(temp));
           });
             return root;
             // if doc for each/ recursive call
@@ -104,10 +107,13 @@ async function grab_data(src)
             let collection_info = await collection_grab(data_path);
              let root = new dataHold.dataHolder(src[src.length-1],null);
             collection_info.forEach(subDoc =>{
-                let temp = src;
+                let temp = [];
+                src.forEach(level => {
+                    temp.push(level);
+                })
                 temp.push(subDoc);
-                console.log("pre call SRC: " + src);
-                root.subDoc.push(grab_data(src));
+                console.log("pre call temp: " + temp);
+                root.subDoc.push(grab_data(temp));
                  //console.log("For each ID: "+ subDoc);
             });
            
@@ -149,7 +155,7 @@ async function collection_grab(data_path)
         let currentID = theDoc.id;
         subDocs.push(currentID);
     })       
-        console.log("pre return : " + subDocs[1]);    
+        //console.log("pre return : " + subDocs[1]);    
       return  subDocs;
     })
                 
