@@ -227,8 +227,8 @@ function copy_data(root,dest)
 // probably used more for copy data
 function element_grab(root)
 {
-              //let fields = Object.keys(root.data);
-          console.log(root.data);
+             let fields = Object.keys(root.data);
+          console.log(fields);
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
 //             
