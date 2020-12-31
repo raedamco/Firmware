@@ -28,13 +28,11 @@ let db = admin.firestore();
 // takes in source destination to copy from
 function move_data(dest,src)
 {
-    // if the string doesn't work look into array for path and use length ti determine doc or collection 
-    // each index label for doc or collection
+  
     
     // check that dest and srd match doc type (doc or collection)
-   // src = db.src;
-    //dest = db.dest;
     let root = grab_data(src); // will return object of class dataHolder that acts as root of tree
+    copy_data(root,dest)
 }
 // function that takes in source destination
 // function copies desination including all sub-documents and stores in data structure that it returns 
@@ -51,12 +49,12 @@ async function grab_data(src)
          }
      else if (src.length % 2 == 0)
          {
-              console.log("doc");
+             // console.log("doc");
              doc =true;
          }
     else
         {
-             console.log("collection");
+            // console.log("collection");
             collection = true;
         }
      let data_path;
@@ -163,6 +161,60 @@ async function collection_grab(data_path)
     })
                 
        return await test;
+}
+function copy_data(root,dest)
+{
+    // create spot to copy root in dest// figure out collection or doc
+     let data_path;
+    let doc = false;
+    let collection = true;
+     // true == collection false == doc
+     for(let i =0; i<dest.length; i+=1)
+         {
+             if(i == 0)
+                 {
+                    data_path = db.collection(dest[i]);
+                      if(i == (dest.length-1))
+                           {
+                               collection = true;
+                           }
+                     //console.log("collection");
+                 }
+             else if (i %2 == 0)
+                 {
+                     data_path = data_path.collection(dest[i]);
+                      if(i == (dest.length-1))
+                           {
+                               collection = true;
+                           }
+                     //console.log("collection");
+                 }
+                else{
+                       data_path = data_path.doc(dest[i]);
+                       if(i == (dest.length-1))
+                           {
+                               doc = true;
+                           }
+                       // console.log("doc");  
+                    }             
+         }
+      
+    
+    // call correct function based of type
+    if(doc === true)
+        {
+            // for each sub collection 
+            // write sub collection names to doc 
+            // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
+        }
+    else if (collection === true)
+    {
+        // for each sub doc 
+        // write sub doc name(id) to collection 
+        // call element grab to write all doc.data() 
+      // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
+        
+    }
 }
 // child = element_fields parent type_test
 // recursive return "new" type test if another object below 
