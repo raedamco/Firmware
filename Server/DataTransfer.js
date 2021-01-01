@@ -286,7 +286,7 @@ async function element_grab(root)
 }
 //let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
 let test =["PSUData","Parking Structure 1","Floor 2"];
-let test2 =["Companies","Portland State University", "Data","Parking Structure 1","averages"];
+let test2 =["Companies","Portland State University", "Data","Parking Structure 1","averages", "Floors"];
 //let test2 = ["PSU"]; //db.collection("PSU");
 async function test_function()
 {
