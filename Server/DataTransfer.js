@@ -236,7 +236,10 @@ async function element_grab(root)
                     let subdoc = await root.subDoc[0];
        // console.log(subdoc);
              }
-      
+          root.subDoc.forEach(subcollection =>{
+                 
+                 db.collection("data-test-dest").doc("1").set(subcollection);
+             })
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
 //             
