@@ -96,7 +96,7 @@ async function grab_data(src)
                  temp.push(collection);
                 //console.log("Pre call Temp:" + temp);
                  let sub =grab_data(temp)
-                  console.log(sub);
+                 // console.log(sub);
              root.subDoc.push(sub);
           });
              // return object created
@@ -118,7 +118,7 @@ async function grab_data(src)
                 temp.push(subDoc);
                 //console.log("pre call temp: " + temp);
                   let sub =grab_data(temp)
-                  console.log(sub);
+                  //console.log(sub);
              root.subDoc.push(sub);
                  //console.log("For each ID: "+ subDoc);
             });
@@ -230,12 +230,13 @@ function copy_data(root,dest)
 // child = element_fields parent type_test
 // recursive return "new" type test if another object below 
 // probably used more for copy data
-function element_grab(root)
+async function element_grab(root)
 {
              let fields = Object.keys(root.data);
           console.log(fields);
           //db.collection('data-test-dest').doc('1').set(root.data);
-        console.log(root.subDoc[0].id);
+         let subdoc = await root.subDoc[0].id;
+        console.log(subdoc);
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
 //             
