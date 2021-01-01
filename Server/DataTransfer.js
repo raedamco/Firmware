@@ -207,17 +207,35 @@ function copy_data(root,dest)
             data_path.set(root.data);
             // for each sub collection 
              root.subDoc.forEach(subcollection =>{
-                 
-                 
+                 // write sub collection names to doc 
+                 data_path.collection(subcollection.id).doc(subcollection.subDoc[0].id).set(subcollection.subDoc[0].data);
+                 let temp =[]; 
+                    dest.forEach(level => {
+                        temp.push(level);
+                    })
+                 temp.push(subcollection.id);
+                 copy_data(subcollection,temp);
              })
-            // write sub collection names to doc 
-               
+            
+            
             // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
         }
     else if (collection === true) 
     {
+        // will probabaly have to skip subDoc[0]
+        if(root.subDoc.length > 1)
+            {
+                for(let i =1; i<root.subDoc.length; i+=1)
+                    {   let temp =[]; 
+                        dest.forEach(level => {
+                            temp.push(level);
+                        })
+                       temp.push(root.subDoc[i].id);
+                       copy_data(root.subDoc[i],temp)
+                    }
+            }
         // for each sub doc 
-        // write sub doc name(id) to collection 
+        // write sub doc name(id) to collection /// probably dont need acutally
     
       // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
         
@@ -267,11 +285,12 @@ async function element_grab(root)
 }
 //let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
 let test =["data-test-src","1"];
+let test2 =["data-test-dest","1"];
 //let test2 = ["PSU"]; //db.collection("PSU");
 async function test_function()
 {
     let root =await  grab_data(test);
-element_grab(root);
+    copy_data(root,test2);
 }
 test_function();
 //grab_data(test2);
