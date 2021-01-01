@@ -112,7 +112,7 @@ async function grab_data(src)
 //             root.subDoc.push(sub);
 //          });
              // return object created
-            if(root.subDoc.length >1)
+            if(root.subDoc.length >0)
                 {
                        console.log(root.sunDoc[0].id)
                 }
@@ -151,7 +151,7 @@ async function grab_data(src)
 //                 //console.log("For each ID: "+ subDoc);
 //            });
             // return object created
-            if(root.subDoc.length >1)
+            if(root.subDoc.length >0)
                 {
                        console.log(root.sunDoc[0].id)
                 }
