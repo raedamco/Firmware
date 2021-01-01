@@ -1,8 +1,8 @@
 //
 //  UDP_Server.js
-//  Raedam 
+//  Raedam
 //
-//  Created on 5/13/2020. Modified on 6/30/2020 by Austin Mckee.
+//  Created on 5/13/2020. Modified on 9/21/2020 by Omar Waked.
 //  Copyright © 2020 Raedam. All rights reserved.
 //
 // This file holds code for the UDP communication between the sensors -> server -> database
@@ -16,6 +16,9 @@ let serviceAccount = require('./serverKey.json');
 const debug = true;
 var PORT = 15000
 
+//Server bot post to slack
+var slack = require('slack-notify')('https://hooks.slack.com/services/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');
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
@@ -26,7 +29,6 @@ var server = udp.createSocket('udp4');
 var occupiedSpots = [];
 var capacity;
 
-
 // emits when any error occurs
 server.on('error',function(error){
   log('Error: ' + error);
@@ -35,35 +37,39 @@ server.on('error',function(error){
 
 // listen for packets
 server.on('message',function(msg, info) {
-    var Time = new Date();
-    log("---------------------------------------------------------------------------------------------------------------------------------------------");
-    log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
+    if (msg.length == 8 || msg.length == 3){
+        var Time = new Date();
+        log("---------------------------------------------------------------------------------------------------------------------------------------------");
+        log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
 
-    var SensorID = msg.readUIntLE(0,1);
+        var SensorID = msg.readUIntLE(0,1);
 
-    let stringHex = msg.toString('hex');
-    //log(stringHex);
-    // log(msg.readUInt8(4,8));
-    // log("Sensor ID: " + msg.readUInt8(0,1));
+        var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
+        Distance = Distance.toFixed(3);
+        Distance = parseFloat(Distance,10);
+        var OccupiedDistance = 48; //Object is within 4 feet (48in)
 
-    var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
-    Distance = Distance.toFixed(3);
-    Distance = parseFloat(Distance,10);
-    var OccupiedDistance = 48; //Object is within 4 feet (48in)
+        if (Distance <= OccupiedDistance) {
+            var Occupied = true;
+            var Occupant = "";
+        }else{
+            var Occupied = false;
+            var Occupant = "";
+        }
 
-    if (Distance <= OccupiedDistance) {
-        var Occupied = true;
-        var Occupant = "";
+        log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
+
+        appendData(String(SensorID), Occupied, Occupant, Time, Distance);
+        queryDatabase();
+        databaseListner();
     }else{
-        var Occupied = false;
-        var Occupant = "";
+        let stringHex = msg.toString('hex');
+        var errorMessage = ("PACKET RECIEVED FUNCTION ERROR. RECIEVED PAKCET WITH LENGTH OF: " + msg.length + ". PACKET INFO: " + stringHex);
+        log(errorMessage);
+        sendSlackBotMessage(errorMessage);
     }
 
-    log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
 
-    appendData(String(SensorID), Occupied, Occupant, Time, Distance);
-    queryDatabase();
-    databaseListner();
 });
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
@@ -127,7 +133,7 @@ async function test_function(sensorID, state, occupant, time, distance)
                         }, { merge: true });
               }else{
                   log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
-                  // code to make new 
+                  // code to make new
                   db.collection('PSU').doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
                     "Occupied": state,
                     "Occupant": occupant,
@@ -185,7 +191,7 @@ function array_test()
                     test.push(101)
                    log("Distances:" + test);
                 });
-                    
+
             }).catch(function(error)
               {
                  // log('Error getting documents', err);
@@ -280,6 +286,23 @@ function updateStructureInfo(structure, available){
 }
 
 
+function sendSlackBotMessage(errorMessage){
+    slack.send({
+        'username': 'Server Error Bot',
+        'text': '<!channel>',
+        'icon_emoji': ':x:',
+        'attachments': [{
+          'color': '#ff0000',
+          'fields': [
+            {
+                'title': 'ERROR OCCURED IN UDP_SERVER:',
+                'value': errorMessage,
+                'short': false
+            },
+          ]
+        }]
+    })
+}
 
 //Only log when debugging not production
 function log(message) {
