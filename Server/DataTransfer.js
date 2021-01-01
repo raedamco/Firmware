@@ -165,6 +165,7 @@ async function collection_grab(data_path)
 }
 function copy_data(root,dest)
 {
+    console.log("Dest:" + dest)
     // create spot to copy root in dest// figure out collection or doc
      let data_path;
     let doc = false;
