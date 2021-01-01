@@ -114,7 +114,7 @@ async function grab_data(src)
              // return object created
             if(root.subDoc.length >0)
                 {
-                       console.log(root.sunDoc[0].id)
+                       console.log(root.subDoc[0].id)
                 }
             return root;
        
@@ -153,7 +153,7 @@ async function grab_data(src)
             // return object created
             if(root.subDoc.length >0)
                 {
-                       console.log(root.sunDoc[0].id)
+                       console.log(root.subDoc[0].id)
                 }
            
               return root;
