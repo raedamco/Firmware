@@ -13,8 +13,8 @@
 #define MESH_PASSWORD "RaedamPassword"
 #define MESH_PORT     5555
 
-#define UNIQUE_ID 4          //this node
-#define NEXT_NODE_ID "5"     //node to forward previous node + this node's info to
+#define UNIQUE_ID 7          //this node
+#define NEXT_NODE_ID "8"     //node to forward previous node + this node's info to
 
 #define PIN_ECHO 27
 #define PIN_TRIG 12
