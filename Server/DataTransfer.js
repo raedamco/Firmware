@@ -89,7 +89,7 @@ async function grab_data(src)
                  // if doc for each/ recursive call
             let sub_collections = await doc_info[1];
             
-             for(let i =0 i<collection_info.length; i+=1)
+             for(let i =0; i<collection_info.length; i+=1)
                  {
                      let temp = [];
                      src.forEach(level => {
@@ -119,7 +119,7 @@ async function grab_data(src)
             let collection_info = await collection_grab(data_path);
              let root = new dataHold.dataHolder(src[src.length-1],null);
             // if collection for each / recursive call
-            for(let i =0 i<collection_info.length; i+=1)
+            for(let i =0; i<collection_info.length; i+=1)
                 {
                      let temp = [];
                     src.forEach(level => {
