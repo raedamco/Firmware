@@ -112,7 +112,7 @@ async function grab_data(src)
 //             root.subDoc.push(sub);
 //          });
              // return object created
-                  console.log("Root:::::::::::::::"+ root.id);
+                  console.log("Root:::::::::::::::"+ root.subDoc);
             return root;
        
         }
