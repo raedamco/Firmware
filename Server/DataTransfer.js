@@ -277,7 +277,8 @@ async function element_grab(root)
 //          } )
 //    
 }
-let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
+//let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
+let test =["data-test-src","1"];
 //let test2 = ["PSU"]; //db.collection("PSU");
 async function test_function()
 {
