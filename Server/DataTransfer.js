@@ -208,7 +208,7 @@ function copy_data(root,dest)
             data_path.set(root.data);
             // for each sub collection 
              root.subDoc.forEach(subcollection =>{
-                 console.log(subcollection)
+                // console.log(subcollection)
                  // write sub collection names to doc 
                  data_path.collection(subcollection.id).doc(subcollection.subDoc[0].id).set(subcollection.subDoc[0].data);
                  let temp =[]; 
@@ -224,10 +224,9 @@ function copy_data(root,dest)
         }
     else if (collection === true) 
     {
-        // will probabaly have to skip subDoc[0]
-        if(root.subDoc.length > 1)
-            {
-                for(let i =1; i<root.subDoc.length; i+=1)
+        // will probabaly have to skip subDoc[0] // maybe not
+      
+                for(let i =0; i<root.subDoc.length; i+=1)
                     {   let temp =[]; 
                         dest.forEach(level => {
                             temp.push(level);
@@ -235,7 +234,7 @@ function copy_data(root,dest)
                        temp.push(root.subDoc[i].id);
                        copy_data(root.subDoc[i],temp)
                     }
-            }
+            
         // for each sub doc 
         // write sub doc name(id) to collection /// probably dont need acutally
     
