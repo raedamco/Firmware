@@ -88,27 +88,17 @@ async function grab_data(src)
             //console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
                  // if doc for each/ recursive call
             let sub_collections = await doc_info[1];
-            
-             for(let i =0; i<doc_info.length; i+=1)
-                 {
-                     let temp = [];
-                     src.forEach(level => {
-                         temp.push(level);
-                    })
-                      temp.push(doc_info[i]);
-                     console.log("TEMP: "+ temp);
-                    // let sub =await grab_data(temp)
-                     //console.log(sub);
-                     // root.subDoc.push(sub);
-                 }
-//            sub_collections.forEach(collection => {
-//                 
-//                
-//                //console.log("Pre call Temp:" + temp);
-//                 
-//                 // console.log(sub);
-//            
-//          });
+            sub_collections.forEach(collection => {
+                 let temp = [];
+                src.forEach(level => {
+                    temp.push(level);
+                })
+                 temp.push(collection);
+                //console.log("Pre call Temp:" + temp);
+                 let sub =grab_data(temp)
+                 // console.log(sub);
+             root.subDoc.push(sub);
+          });
              // return object created
             return root;
        
@@ -120,25 +110,18 @@ async function grab_data(src)
             let collection_info = await collection_grab(data_path);
              let root = new dataHold.dataHolder(src[src.length-1],null);
             // if collection for each / recursive call
-            for(let i =0; i<collection_info.length; i+=1)
-                {
-                     let temp = [];
-                    src.forEach(level => {
-                        temp.push(level);
-                    })
-                    temp.push(collection_info[i]);
-                      let sub = await grab_data(temp)
-                       root.subDoc.push(sub);
-                }
-//            collection_info.forEach(subDoc =>{
-//               
-//                
-//                //console.log("pre call temp: " + temp);
-//                
-//                  //console.log(sub);
-//            
-//                 //console.log("For each ID: "+ subDoc);
-//            });
+            collection_info.forEach(subDoc =>{
+                let temp = [];
+                src.forEach(level => {
+                    temp.push(level);
+                })
+                temp.push(subDoc);
+                //console.log("pre call temp: " + temp);
+                  let sub =grab_data(temp)
+                  //console.log(sub);
+             root.subDoc.push(sub);
+                 //console.log("For each ID: "+ subDoc);
+            });
             // return object created
               return root;
     
@@ -252,7 +235,7 @@ async function element_grab(root)
              let fields = Object.keys(root.data);
           console.log(fields);
           //db.collection('data-test-dest').doc('1').set(root.data);
-         let subdoc = await root.subDoc;
+         let subdoc = await root;
         console.log(subdoc);
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
