@@ -235,7 +235,7 @@ async function element_grab(root)
              let fields = Object.keys(root.data);
           console.log(fields);
           //db.collection('data-test-dest').doc('1').set(root.data);
-         let subdoc = await root.subDoc[0].id;
+         let subdoc = await root;
         console.log(subdoc);
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
