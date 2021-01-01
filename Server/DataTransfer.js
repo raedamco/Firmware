@@ -208,6 +208,7 @@ function copy_data(root,dest)
             data_path.set(root.data);
             // for each sub collection 
              root.subDoc.forEach(subcollection =>{
+                 console.log(subcollection)
                  // write sub collection names to doc 
                  data_path.collection(subcollection.id).doc(subcollection.subDoc[0].id).set(subcollection.subDoc[0].data);
                  let temp =[]; 
