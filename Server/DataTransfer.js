@@ -88,18 +88,29 @@ async function grab_data(src)
             //console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
                  // if doc for each/ recursive call
             let sub_collections = await doc_info[1];
-            sub_collections.forEach(collection => {
-                 let temp = [];
-                src.forEach(level => {
-                    temp.push(level);
-                })
-                 temp.push(collection);
-                 //console.log(temp);
-                //console.log("Pre call Temp:" + temp);
-                 let sub =grab_data(temp)
-                 // console.log(sub);
-             root.subDoc.push(sub);
-          });
+            
+            for( let i =0; i<sub_collections.length; i+=1)
+                {
+                    let temp =[]; 
+                    src.forEach(level => {
+                        temp.push(level);
+                    })
+                    temp.push(sub_collections[i]);
+                    let sub = await grab_data(temp);
+                    root.subDoc.push(sub);
+                }
+//            sub_collections.forEach(collection => {
+//                 let temp = [];
+//                src.forEach(level => {
+//                    temp.push(level);
+//                })
+//                 temp.push(collection);
+//                 //console.log(temp);
+//                //console.log("Pre call Temp:" + temp);
+//                 let sub =grab_data(temp)
+//                 // console.log(sub);
+//             root.subDoc.push(sub);
+//          });
              // return object created
                   console.log("Root:::::::::::::::"+ root.id);
             return root;
