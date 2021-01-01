@@ -112,6 +112,10 @@ async function grab_data(src)
 //             root.subDoc.push(sub);
 //          });
              // return object created
+            if(root.subDoc.length >1)
+                {
+                       console.log(root.sunDoc[0].id)
+                }
             return root;
        
         }
@@ -147,6 +151,11 @@ async function grab_data(src)
 //                 //console.log("For each ID: "+ subDoc);
 //            });
             // return object created
+            if(root.subDoc.length >1)
+                {
+                       console.log(root.sunDoc[0].id)
+                }
+           
               return root;
     
         }
@@ -262,7 +271,7 @@ async function element_grab(root)
          if(root.subDoc.length >0)
              {
                     let subdoc = await root.subDoc[0];
-        console.log(subdoc);
+       // console.log(subdoc);
              }
       
 //          await console.log(doc.data()[temp]);
