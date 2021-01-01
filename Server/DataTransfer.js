@@ -99,23 +99,6 @@ async function grab_data(src)
                     let sub = await grab_data(temp);
                     root.subDoc.push(sub);
                 }
-//            sub_collections.forEach(collection => {
-//                 let temp = [];
-//                src.forEach(level => {
-//                    temp.push(level);
-//                })
-//                 temp.push(collection);
-//                 //console.log(temp);
-//                //console.log("Pre call Temp:" + temp);
-//                 let sub =grab_data(temp)
-//                 // console.log(sub);
-//             root.subDoc.push(sub);
-//          });
-             // return object created
-            if(root.subDoc.length >0)
-                {
-                       console.log(root.subDoc[0].id)
-                }
             return root;
        
         }
@@ -136,26 +119,6 @@ async function grab_data(src)
                     let sub = await grab_data(temp);
                     root.subDoc.push(sub);
                 }
-            
-//            collection_info.forEach(subDoc =>{
-//                let temp = [];
-//                src.forEach(level => {
-//                    temp.push(level);
-//                })
-//                temp.push(subDoc);
-//                //console.log(temp)
-//                //console.log("pre call temp: " + temp);
-//                  let sub =grab_data(temp)
-//                  //console.log(sub);
-//             root.subDoc.push(sub);
-//                 //console.log("For each ID: "+ subDoc);
-//            });
-            // return object created
-            if(root.subDoc.length >0)
-                {
-                       console.log(root.subDoc[0].id)
-                }
-           
               return root;
     
         }
