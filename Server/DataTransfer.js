@@ -89,13 +89,13 @@ async function grab_data(src)
                  // if doc for each/ recursive call
             let sub_collections = await doc_info[1];
             
-             for(let i =0; i<collection_info.length; i+=1)
+             for(let i =0; i<doc_info.length; i+=1)
                  {
                      let temp = [];
                      src.forEach(level => {
                          temp.push(level);
                     })
-                      temp.push(collection_info[i]);
+                      temp.push(doc_info[i]);
                      let sub =await grab_data(temp)
                      console.log(sub);
                       root.subDoc.push(sub);
