@@ -101,7 +101,7 @@ async function grab_data(src)
              root.subDoc.push(sub);
           });
              // return object created
-                  console.log("Root:::::::::::::::"+ root);
+                  console.log("Root:::::::::::::::"+ root.id);
             return root;
        
         }
@@ -126,7 +126,7 @@ async function grab_data(src)
                  //console.log("For each ID: "+ subDoc);
             });
             // return object created
-            console.log("Root:::::::::::::::"+ root);
+            console.log("Root:::::::::::::::"+ root.id);
               return root;
     
         }
