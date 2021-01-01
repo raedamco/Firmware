@@ -94,13 +94,14 @@ async function grab_data(src)
                     temp.push(level);
                 })
                  temp.push(collection);
-                 console.log(temp);
+                 //console.log(temp);
                 //console.log("Pre call Temp:" + temp);
                  let sub =grab_data(temp)
                  // console.log(sub);
              root.subDoc.push(sub);
           });
              // return object created
+                  console.log("Root:::::::::::::::"+ root);
             return root;
        
         }
@@ -117,7 +118,7 @@ async function grab_data(src)
                     temp.push(level);
                 })
                 temp.push(subDoc);
-                console.log(temp)
+                //console.log(temp)
                 //console.log("pre call temp: " + temp);
                   let sub =grab_data(temp)
                   //console.log(sub);
@@ -125,6 +126,7 @@ async function grab_data(src)
                  //console.log("For each ID: "+ subDoc);
             });
             // return object created
+            console.log("Root:::::::::::::::"+ root);
               return root;
     
         }
