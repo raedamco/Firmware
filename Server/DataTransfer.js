@@ -238,7 +238,7 @@ async function element_grab(root)
              }
           root.subDoc.forEach(subcollection =>{
                  
-                 db.collection("data-test-dest").doc("1").collection(subcollection.id).add(subcollection.subDoc[0]);
+                 db.collection("data-test-dest").doc("1").collection(subcollection.id).add(subcollection.subDoc[0].data);
              })
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
