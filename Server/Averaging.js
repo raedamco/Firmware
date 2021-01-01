@@ -1,6 +1,6 @@
 //
 //  Averaging.js
-//  Raedam 
+//  Raedam
 //
 //  Created on 5/13/2020. Modified on 6/30/2020 by Austin Mckee.
 //  Copyright © 2020 Raedam. All rights reserved.
@@ -31,7 +31,7 @@ let setAvgOccupancy = 1;
 //parseDatabase("Parking Structure 1", "Floor 2", docAmount);
 
 //Execute code based on time (https://www.npmjs.com/package/node-cron) || Format: sec, min, hr, day of month, month, day of week || */1 = runs every min
-// change schedule for time frequency 
+// change schedule for time frequency
 cron.schedule(" 0 * * * *",()=> {
     get_average_floor("Parking Structure 1", "Floor 2", docAmount); /// add organization long term
     /// add get_average_floor calls for each floor you want inside here
@@ -41,40 +41,40 @@ function get_average_floor(StructureID, FloorID, DocumentAmounts)
     parseDatabase(StructureID, FloorID, docAmount);
 }
 //Get spot data from database
-/// add organization long term 
+/// add organization long term
 function parseDatabase(StructureID, FloorID, DocumentAmounts)
 {
  var total_avg = 0;
  var itemsProcessed = 0;
  //// long term replace "Psu" with organization var
-    db.collection("PSU").doc(StructureID).collection(FloorID).get().then( function(querySnapshot) 
+    db.collection("Companies").doc("Portland State University").collection("Data").doc(StructureID).collection(FloorID).get().then( function(querySnapshot)
     {
-         querySnapshot.forEach(async function(doc) 
+         querySnapshot.forEach(async function(doc)
         {
             var id = doc.id;
             var temp = await retrieveData(StructureID, FloorID, id, DocumentAmounts);
             total_avg += await temp;
-            
+
             itemsProcessed++;
             if(itemsProcessed == querySnapshot.size)
                 {
                     addData(StructureID, FloorID,total_avg);
                 }
-             
+
         });
-        
+
     }
   ).catch(function(error) {
         log("Error getting documents: " + error);
     });
 
-   
+
 }
 
 async function retrieveData(StructureID, FloorID, spotID, DocumentAmounts){
     var averageOccupancy = 0;
     var test = 0;
-   test += await db.collection("PSU").doc(StructureID).collection(FloorID).doc(spotID).collection("Data").orderBy("Time.End", "desc").limit(DocumentAmounts).get().then(function(querySnapshot)
+   test += await db.collection("Companies").doc("Portland State University").collection("Data").doc(StructureID).collection(FloorID).doc(spotID).collection("Data").orderBy("Time.End", "desc").limit(DocumentAmounts).get().then(function(querySnapshot)
     {
          var is_occ = 0;
         querySnapshot.forEach(function(doc) {
@@ -125,7 +125,7 @@ function interpretTime(TimeStamp){
     var hour = TimeStamp.toDate().getHours();
     var date = new Date();
     var currentHour = date.getHours();
-     
+
     if (currentHour == hour){
         return true;
     }else if( (currentHour - 1) == hour){
