@@ -97,8 +97,8 @@ async function grab_data(src)
                     })
                       temp.push(doc_info[i]);
                      console.log(temp);
-                     let sub =await grab_data(temp)
-                     console.log(sub);
+                    // let sub =await grab_data(temp)
+                     //console.log(sub);
                       root.subDoc.push(sub);
                  }
 //            sub_collections.forEach(collection => {
