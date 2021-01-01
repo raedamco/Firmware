@@ -94,6 +94,7 @@ async function grab_data(src)
                     temp.push(level);
                 })
                  temp.push(collection);
+                 console.log(temp);
                 //console.log("Pre call Temp:" + temp);
                  let sub =grab_data(temp)
                  // console.log(sub);
@@ -116,6 +117,7 @@ async function grab_data(src)
                     temp.push(level);
                 })
                 temp.push(subDoc);
+                console.log(temp)
                 //console.log("pre call temp: " + temp);
                   let sub =grab_data(temp)
                   //console.log(sub);
