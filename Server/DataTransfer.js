@@ -112,7 +112,6 @@ async function grab_data(src)
 //             root.subDoc.push(sub);
 //          });
              // return object created
-                  console.log("Root:::::::::::::::"+ root.subDoc[0].id);
             return root;
        
         }
@@ -123,21 +122,31 @@ async function grab_data(src)
             let collection_info = await collection_grab(data_path);
              let root = new dataHold.dataHolder(src[src.length-1],null);
             // if collection for each / recursive call
-            collection_info.forEach(subDoc =>{
-                let temp = [];
-                src.forEach(level => {
-                    temp.push(level);
-                })
-                temp.push(subDoc);
-                //console.log(temp)
-                //console.log("pre call temp: " + temp);
-                  let sub =grab_data(temp)
-                  //console.log(sub);
-             root.subDoc.push(sub);
-                 //console.log("For each ID: "+ subDoc);
-            });
+            for(let i =0; i<collection_info.length; i+=1) // may need if statement to make sure length > 0
+                {
+                    let temp = [];
+                    src.forEach(level => {
+                        temp.push(level);
+                    }) 
+                    temp.push(collection_info[i]);
+                    let sub = await grab_data(temp);
+                    root.subDoc.push(sub);
+                }
+            
+//            collection_info.forEach(subDoc =>{
+//                let temp = [];
+//                src.forEach(level => {
+//                    temp.push(level);
+//                })
+//                temp.push(subDoc);
+//                //console.log(temp)
+//                //console.log("pre call temp: " + temp);
+//                  let sub =grab_data(temp)
+//                  //console.log(sub);
+//             root.subDoc.push(sub);
+//                 //console.log("For each ID: "+ subDoc);
+//            });
             // return object created
-            console.log("Root:::::::::::::::"+ root.id);
               return root;
     
         }
@@ -250,8 +259,12 @@ async function element_grab(root)
              let fields = Object.keys(root.data);
          // console.log(fields);
           //db.collection('data-test-dest').doc('1').set(root.data);
-         let subdoc = await root;
-        //console.log(subdoc);
+         if(root.subDoc.length >0)
+             {
+                    let subdoc = await root.subDoc[0];
+        console.log(subdoc);
+             }
+      
 //          await console.log(doc.data()[temp]);
 //          fields.forEach(function(element){
 //             
