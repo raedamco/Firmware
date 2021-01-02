@@ -32,7 +32,7 @@ let setAvgOccupancy = 1;
 
 //Execute code based on time (https://www.npmjs.com/package/node-cron) || Format: sec, min, hr, day of month, month, day of week || */1 = runs every min
 // change schedule for time frequency
-cron.schedule(" 0 * * * *",()=> {
+cron.schedule(" 32 * * * *",()=> {
     get_average_floor("Parking Structure 1", "Floor 2", docAmount); /// add organization long term
     /// add get_average_floor calls for each floor you want inside here
 })
@@ -110,7 +110,7 @@ async function retrieveData(StructureID, FloorID, spotID, DocumentAmounts){
 function addData(StructureID, FloorID, Average){
     var Time = new Date();
 
-    db.collection("PSUData").doc(StructureID).collection(FloorID).add({
+    db.collection("Companies").doc("Portland State University").collection("Data").doc(StructureID).collection("Averages").doc("Floors").collection(FloorID).add({
         ["Average"]: Average,
         ["Time"]: Time,
     }).then(ref => {
