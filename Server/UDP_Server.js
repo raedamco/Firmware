@@ -244,6 +244,8 @@ function updateStructureInfo(structure, available){
     }).catch(err => {
         log('Error getting documents', err);
     });
+    log("UNOCCUPIED SPOTS ", unoccupiedSpots);
+    log("OCCUPIED SPOTS ", occupiedSpots);
 }
 
 function sendSlackBotMessage(errorMessage){
