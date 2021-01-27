@@ -213,32 +213,40 @@ function databaseListner(){
     db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").onSnapshot(function(snapshot) {
         snapshot.docChanges().forEach(function(change) {
             if (change.type === "modified") {
-                if (change.doc.data()["Occupancy"]["Occupied"] == true) {
-                    if (occupiedSpots.includes(change.doc.id) == false){
-                        occupiedSpots.push(change.doc.id);
-                    }
-                }else if (change.doc.data()["Occupancy"]["Occupied"] == false) {
-                    if (unoccupiedSpots.includes(change.doc.id) == false){
-                        unoccupiedSpots.push(change.doc.id);
-                    }
-                }else{
-                    if (occupiedSpots.includes(change.doc.id)){
-                        var index = occupiedSpots.indexOf(change.doc.id);
-                        if (index > -1) {
-                          occupiedSpots.splice(index, 1);
-                        }
-                    }else if (unoccupiedSpots.includes(change.doc.id)){
-                        var index = unoccupiedSpots.indexOf(change.doc.id);
-                        if (index > -1) {
-                          unoccupiedSpots.splice(index, 1);
-                        }
-                    }
-                }
+                removeDuplicates(change);
             }
             updateFloorInfo("Floor 2", occupiedSpots.length);
             updateStructureInfo("Parking Structure 1", occupiedSpots.length);
         });
     });
+}
+
+function removeDuplicates(change){
+    if (change.doc.data()["Occupancy"]["Occupied"] == true){
+        if (occupiedSpots.includes(change.doc.id) == false){
+            occupiedSpots.push(change.doc.id);
+        }
+    }else{
+        if (occupiedSpots.includes(change.doc.id)){
+            var index = occupiedSpots.indexOf(change.doc.id);
+            if (index > -1) {
+              occupiedSpots.splice(index, 1);
+            }
+        }
+    }
+
+    if (change.doc.data()["Occupancy"]["Occupied"] == false){
+        if (unoccupiedSpots.includes(change.doc.id) == false){
+            unoccupiedSpots.push(change.doc.id);
+        }
+    }else{
+        if (unoccupiedSpots.includes(change.doc.id)){
+            var index = unoccupiedSpots.indexOf(change.doc.id);
+            if (index > -1) {
+              unoccupiedSpots.splice(index, 1);
+            }
+        }
+    }
 }
 
 function updateFloorInfo(floor, available){
