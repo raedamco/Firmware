@@ -2,12 +2,12 @@
 //  UDP_Server.js
 //  Raedam
 //
-//  Created on 5/13/2020. Modified on 1/27/2021 by Omar Waked.
-//  Copyright © 2021 Raedam. All rights reserved.
+//  Created on 5/13/2020. Modified on 9/21/2020 by Omar Waked.
+//  Copyright © 2020 Raedam. All rights reserved.
 //
-// This file holds code for the UDP communication between the sensors -> server -> database. Functions in this file update the database fields and documents as the database is modified.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This file holds code for the UDP communication between the sensors -> server -> database
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 var udp = require('dgram');
 const admin = require('firebase-admin');
 
@@ -48,7 +48,7 @@ server.on('message',function(msg, info) {
         var Distance = ((((msg.readUIntLE(1,2) * 0.000001) * 343)/2) * 39.37);
         Distance = Distance.toFixed(3);
         Distance = parseFloat(Distance,10);
-        var OccupiedDistance = 48; //In inches. Object is within 4 feet (48in)
+        var OccupiedDistance = 48; //Object is within 4 feet (48in)
 
         if (Distance <= OccupiedDistance) {
             var Occupied = true;
@@ -69,23 +69,28 @@ server.on('message',function(msg, info) {
         log(errorMessage);
         sendSlackBotMessage(errorMessage);
     }
-});
 
+
+});
 // adds data entry for spot
 async function appendData(sensorID, state, occupant, time, distance) {
     //Check if sensor exists in the database before adding data, ensures random data is not added.
     db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
-        if (!doc.exists){
+
+        if (!doc.exists)
+        {
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
-        }else{
+        } else
+        {
             test_function(sensorID, state, occupant, time, distance);
         }
-    }).catch(err => {
+        }).catch(err => {
         //log('Error getting document' + err);
     });
 }
 
-async function test_function(sensorID, state, occupant, time, distance){
+async function test_function(sensorID, state, occupant, time, distance)
+{
     db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
         if (snap.size == 0) {
             db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").add({
@@ -104,15 +109,22 @@ async function test_function(sensorID, state, occupant, time, distance){
             updateDocumentInfo(sensorID, state, occupant);
         }else{
             //RUN LOGIC HERE TO SEE IF DATA SHOULD BE MERGED WITH EXISITNG DOCUMENT OR CREATE NEW DOCUMENT
-            var old_data = db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot){
-                querySnapshot.forEach(async function(doc){
-                    if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state){// checks for change in status if not log added to current doc
+            var old_data = db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot)
+            {
+                querySnapshot.forEach(async function(doc)
+                {
+                    if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
+                    {
+                        ///log("TEST DISTANCES: "+ doc.data()["Distances"]);
+                       // log("TEST distance: " + distance );
                         var the_test = await doc.data()["Distances"]
                         typeof the_test;
+                        //log("The Test Type : "+ typeof the_test)
                         the_test.push(distance)
                         var temp_history = await doc.data()["Time"]["History"]
                         typeof temp_history;
                         temp_history.push(time)
+                        //log("Post push: " + the_test  )
                         db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").doc(doc.id).set({
                             Distances: the_test,
                             Time: {
@@ -147,7 +159,7 @@ async function test_function(sensorID, state, occupant, time, distance){
             });
         }
     });
-
+}
 // udpdates spot info itself in database
 function updateDocumentInfo(sensorID, state, occupant){
     db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).get().then(doc => {
@@ -169,12 +181,14 @@ server.on('listening',function(){
   log("SERVER LISTENING ON PORT : " + address.port + " | SERVER IP: " + address.address + " | SERVER TYPE: " + address.family);
 });
 
+
 //emits after the socket is closed using socket.close();
 server.on('close',function(){
   log('Socket is closed !');
 });
 
 server.bind(PORT);
+
 
 function queryDatabase(){
     db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').get().then(doc => {
@@ -186,8 +200,10 @@ function queryDatabase(){
             if (doc.data()["Occupancy"]["Occupied"] == true){
                 if (occupiedSpots.includes(doc.id) == false){
                     occupiedSpots.push(doc.id);
-                }else{
-                    unoccupiedSpots.push(doc.id);
+                }
+            }else if (doc.data()["Occupancy"]["Occupied"] == false){
+                if (unoccupiedSpots.includes(doc.id) == false){
+                  unoccupiedSpots.push(doc.id);
                 }
             }
         });
@@ -203,7 +219,9 @@ function databaseListner(){
                 if (change.doc.data()["Occupancy"]["Occupied"] == true) {
                     if (occupiedSpots.includes(change.doc.id) == false){
                         occupiedSpots.push(change.doc.id);
-                    }else{
+                    }
+                }else if (change.doc.data()["Occupancy"]["Occupied"] == false) {
+                    if (unoccupiedSpots.includes(change.doc.id) == false){
                         unoccupiedSpots.push(change.doc.id);
                     }
                 }else{
@@ -226,7 +244,6 @@ function databaseListner(){
     });
 }
 
-//Updates the structure's document floor field (summary of all floors within a structure)
 function updateFloorInfo(floor, available){
     db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').update({
         ["Floor Data." + floor + ".Available"]: (capacity - available),
@@ -235,16 +252,16 @@ function updateFloorInfo(floor, available){
     });
 }
 
-//Updates the structure's document fields (for data summary of all spots within the structure)
 function updateStructureInfo(structure, available){
     db.collection("Companies").doc("Portland State University").collection("Data").doc(structure).update({
         "Capacity.Available": (capacity - available),
         "Spot Status.Occupied": occupiedSpots,
-        "Spot Status.Unoccupied": unoccupiedSpots
+        "Spot Status.Unoccupied": unoccupiedSpots,
     }).catch(err => {
         log('Error getting documents', err);
     });
 }
+
 
 function sendSlackBotMessage(errorMessage){
     slack.send({
