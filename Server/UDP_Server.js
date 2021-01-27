@@ -115,16 +115,14 @@ async function test_function(sensorID, state, occupant, time, distance)
                 {
                     if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state)// checks for change in status if not log added to current doc
                     {
-                        ///log("TEST DISTANCES: "+ doc.data()["Distances"]);
-                       // log("TEST distance: " + distance );
                         var the_test = await doc.data()["Distances"]
                         typeof the_test;
-                        //log("The Test Type : "+ typeof the_test)
                         the_test.push(distance)
+
                         var temp_history = await doc.data()["Time"]["History"]
                         typeof temp_history;
                         temp_history.push(time)
-                        //log("Post push: " + the_test  )
+
                         db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').collection("Floor 2").doc(sensorID).collection("Data").doc(doc.id).set({
                             Distances: the_test,
                             Time: {
@@ -188,7 +186,6 @@ server.on('close',function(){
 });
 
 server.bind(PORT);
-
 
 function queryDatabase(){
     db.collection("Companies").doc("Portland State University").collection("Data").doc('Parking Structure 1').get().then(doc => {
@@ -255,8 +252,8 @@ function updateFloorInfo(floor, available){
 function updateStructureInfo(structure, available){
     db.collection("Companies").doc("Portland State University").collection("Data").doc(structure).update({
         "Capacity.Available": (capacity - available),
-        "Spot Status.Occupied": occupiedSpots,
-        "Spot Status.Unoccupied": unoccupiedSpots,
+        "Spot Status.Occupied": occupiedSpots.map(Number),
+        "Spot Status.Unoccupied": unoccupiedSpots.map(Number),
     }).catch(err => {
         log('Error getting documents', err);
     });
