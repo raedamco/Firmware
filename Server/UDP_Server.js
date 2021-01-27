@@ -240,12 +240,10 @@ function updateStructureInfo(structure, available){
     db.collection("Companies").doc("Portland State University").collection("Data").doc(structure).update({
         "Capacity.Available": (capacity - available),
         "Spot Status.Occupied": occupiedSpots,
-        "Spot Status.Unoccupied": unoccupiedSpots,
+        "Spot Status.Unoccupied": unoccupiedSpots
     }).catch(err => {
         log('Error getting documents', err);
     });
-    log("UNOCCUPIED SPOTS ", unoccupiedSpots);
-    log("OCCUPIED SPOTS ", occupiedSpots);
 }
 
 function sendSlackBotMessage(errorMessage){
@@ -255,11 +253,13 @@ function sendSlackBotMessage(errorMessage){
         'icon_emoji': ':x:',
         'attachments': [{
           'color': '#ff0000',
-          'fields': [{
+          'fields': [
+            {
                 'title': 'ERROR OCCURED IN UDP_SERVER:',
                 'value': errorMessage,
                 'short': false
-            }]
+            },
+          ]
         }]
     })
 }
