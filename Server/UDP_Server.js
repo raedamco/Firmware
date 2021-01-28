@@ -24,9 +24,8 @@ admin.initializeApp({
 });
 
 let db = admin.firestore();
-var server = udp.createSocket('udp4');
-
 var database = db.collection("Companies");
+var server = udp.createSocket('udp4');
 
 var occupiedSpots = [];
 var unoccupiedSpots = [];
@@ -45,6 +44,7 @@ server.on('message',function(msg, info) {
         log("---------------------------------------------------------------------------------------------------------------------------------------------");
         log("PACKET RECIEVED: LENGTH: [" + msg.length + "] | ADDRESS: [" + info.address + "] | PORT: [" + info.port + "] | TIME: [" + Time + "]");
 
+        //temp variables. These will be retrieved from UDP sent by Boron unit
         var company = "Portland State University";
         var location = "Parking Structure 1";
         var floor = "Floor 2";
@@ -65,7 +65,6 @@ server.on('message',function(msg, info) {
         }
 
         log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
-
         appendData(company, location, floor, String(SensorID), Occupied, Occupant, Time, Distance);
         queryDatabase(company, location, floor);
         databaseListner(company, location, floor);
@@ -84,30 +83,17 @@ async function appendData(company, location, floor, sensorID, state, occupant, t
         if (!doc.exists){
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
         }else{
-            test_function(company, location, floor, sensorID, state, occupant, time, distance);
+          test_function(company, location, floor, sensorID, state, occupant, time, distance);
         }
     }).catch(err => {
-        //log('Error getting document' + err);
+        log('Error getting document' + err);
     });
 }
 
 async function test_function(company, location, floor, sensorID, state, occupant, time, distance){
     database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
         if (snap.size == 0) {
-            database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").add({
-                "Occupied": state,
-                "Occupant": occupant,
-                "Distances": [distance],
-                Time: {
-                  Begin: time,
-                  End: time,
-                  History: [time]
-                }
-            }).then(ref => {
-            }).catch(err => {
-                log('Error getting documents', err);
-            });
-            updateDocumentInfo(company, location, floor, sensorID, state, occupant);
+            addSpotDocument(company, location, floor, sensorID, state, occupant, time, distance);
         }else{
             //RUN LOGIC HERE TO SEE IF DATA SHOULD BE MERGED WITH EXISITNG DOCUMENT OR CREATE NEW DOCUMENT
             var old_data = database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot){
@@ -128,25 +114,12 @@ async function test_function(company, location, floor, sensorID, state, occupant
                               End: time,
                             }
                         }, { merge: true });
-              }else{
-                  log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
-                  // code to make new
-                  database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").add({
-                    "Occupied": state,
-                    "Occupant": occupant,
-                    "Distances": [distance],
-                     Time: {
-                       Begin: time,
-                       End: time,
-                       History: [time]
-                    }
-                }).then(ref => {
-                  }).catch(err => {
-                      log('Error getting documents', err);
-                  });
-                    updateDocumentInfo(company, location, floor, sensorID, state, occupant);
-              }
-            });
+                      }else{
+                        log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
+                        // code to make new
+                        addSpotDocument(company, location, floor, sensorID, state, occupant, time, distance)
+                      }
+                });
                 return querySnapshot;
             }).catch(function(error){
                 log('Error getting documents', err);
@@ -154,6 +127,25 @@ async function test_function(company, location, floor, sensorID, state, occupant
         }
     });
 }
+
+//Create spot log in database
+function addSpotDocument(company, location, floor, sensorID, state, occupant, time, distance){
+  database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").add({
+      "Occupied": state,
+      "Occupant": occupant,
+      "Distances": [distance],
+      Time: {
+        Begin: time,
+        End: time,
+        History: [time]
+      }
+  }).then(ref => {
+  }).catch(err => {
+      log('Error getting documents', err);
+  });
+  updateDocumentInfo(company, location, floor, sensorID, state, occupant);
+}
+
 // udpdates spot info itself in database
 function updateDocumentInfo(company, location, floor, sensorID, state, occupant){
     database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).get().then(doc => {
@@ -174,7 +166,6 @@ server.on('listening',function(){
   var address = server.address();
   log("SERVER LISTENING ON PORT : " + address.port + " | SERVER IP: " + address.address + " | SERVER TYPE: " + address.family);
 });
-
 
 //emits after the socket is closed using socket.close();
 server.on('close',function(){
