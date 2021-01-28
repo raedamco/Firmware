@@ -13,7 +13,7 @@ const admin = require('firebase-admin');
 let serviceAccount = require('./serverKey.json');
 var slack = require('slack-notify')('https://hooks.slack.com/services/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');
 
-const production = false;
+const debug = true;
 var PORT = 15000
 
 admin.initializeApp({
@@ -269,7 +269,7 @@ server.bind(PORT);
 
 //Only log when debugging not production
 function log(message) {
-  if !(debug) {
+  if (debug) {
     console.log(message);
   }
 }
