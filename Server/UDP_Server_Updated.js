@@ -220,24 +220,20 @@ function removeDuplicates(change){
         if (occupiedSpots.includes(change.doc.id) == false){
             occupiedSpots.push(change.doc.id);
         }
-    }else{
-        if (occupiedSpots.includes(change.doc.id)){
-            var index = occupiedSpots.indexOf(change.doc.id);
-            if (index > -1) {
-              occupiedSpots.splice(index, 1);
-            }
-        }
-    }
-
-    if (change.doc.data()["Occupancy"]["Occupied"] == false){
-        if (unoccupiedSpots.includes(change.doc.id) == false){
-            unoccupiedSpots.push(change.doc.id);
-        }
-    }else{
         if (unoccupiedSpots.includes(change.doc.id)){
             var index = unoccupiedSpots.indexOf(change.doc.id);
             if (index > -1) {
               unoccupiedSpots.splice(index, 1);
+            }
+        }
+    }else{
+        if (unoccupiedSpots.includes(change.doc.id) == false){
+            unoccupiedSpots.push(change.doc.id).;
+        }
+        if (occupiedSpots.includes(change.doc.id)){
+            var index = occupiedSpots.indexOf(change.doc.id);
+            if (index > -1) {
+              occupiedSpots.splice(index, 1);
             }
         }
     }
