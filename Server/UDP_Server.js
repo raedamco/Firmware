@@ -26,6 +26,8 @@ admin.initializeApp({
 let db = admin.firestore();
 var server = udp.createSocket('udp4');
 
+var database = db.collection("Companies");
+
 var occupiedSpots = [];
 var unoccupiedSpots = [];
 var capacity;
@@ -78,7 +80,7 @@ server.on('message',function(msg, info) {
 // adds data entry for spot
 async function appendData(company, location, floor, sensorID, state, occupant, time, distance) {
     //Check if sensor exists in the database before adding data, ensures random data is not added.
-    db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).get().then(doc => {
+    database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).get().then(doc => {
         if (!doc.exists){
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
         }else{
@@ -90,17 +92,17 @@ async function appendData(company, location, floor, sensorID, state, occupant, t
 }
 
 async function test_function(company, location, floor, sensorID, state, occupant, time, distance){
-    db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
+    database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
         if (snap.size == 0) {
-            db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").add({
+            database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").add({
                 "Occupied": state,
                 "Occupant": occupant,
                 "Distances": [distance],
                 Time: {
-                    Begin: time,
-                    End: time,
-                    History: [time]
-                },
+                  Begin: time,
+                  End: time,
+                  History: [time]
+                }
             }).then(ref => {
             }).catch(err => {
                 log('Error getting documents', err);
@@ -108,9 +110,9 @@ async function test_function(company, location, floor, sensorID, state, occupant
             updateDocumentInfo(company, location, floor, sensorID, state, occupant);
         }else{
             //RUN LOGIC HERE TO SEE IF DATA SHOULD BE MERGED WITH EXISITNG DOCUMENT OR CREATE NEW DOCUMENT
-            var old_data = db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot){
+            var old_data = database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").orderBy("Time.End", "desc").limit(1).get().then(async function(querySnapshot){
                 querySnapshot.forEach(async function(doc){
-                    if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state){// checks for change in status if not log added to current doc
+                    if(doc.data()["Occupant"] == occupant && doc.data()["Occupied"] == state){ // checks for change in status if not log added to current doc
                         var the_test = await doc.data()["Distances"]
                         typeof the_test;
                         the_test.push(distance)
@@ -119,17 +121,17 @@ async function test_function(company, location, floor, sensorID, state, occupant
                         typeof temp_history;
                         temp_history.push(time)
 
-                        db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").doc(doc.id).set({
+                        database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").doc(doc.id).set({
                             Distances: the_test,
                             Time: {
-                                History:  temp_history,
-                                End: time,
+                              History:  temp_history,
+                              End: time,
                             }
                         }, { merge: true });
               }else{
                   log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
                   // code to make new
-                  db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").add({
+                  database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").add({
                     "Occupied": state,
                     "Occupant": occupant,
                     "Distances": [distance],
@@ -137,7 +139,7 @@ async function test_function(company, location, floor, sensorID, state, occupant
                        Begin: time,
                        End: time,
                        History: [time]
-                    },
+                    }
                 }).then(ref => {
                   }).catch(err => {
                       log('Error getting documents', err);
@@ -147,15 +149,15 @@ async function test_function(company, location, floor, sensorID, state, occupant
             });
                 return querySnapshot;
             }).catch(function(error){
-                 // log('Error getting documents', err);
+                log('Error getting documents', err);
             });
         }
     });
 }
 // udpdates spot info itself in database
 function updateDocumentInfo(company, location, floor, sensorID, state, occupant){
-    db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).get().then(doc => {
-        db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).update({
+    database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).get().then(doc => {
+        database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).update({
             "Occupancy.Occupied": state,
             "Occupancy.Occupant": occupant,
         }).catch(err => {
@@ -182,11 +184,11 @@ server.on('close',function(){
 server.bind(PORT);
 
 function queryDatabase(company, location, floor){
-    db.collection("Companies").doc(company).collection("Data").doc(location).get().then(doc => {
+    database.doc(company).collection("Data").doc(location).get().then(doc => {
         capacity = doc.data()["Capacity"]["Capacity"];
     });
 
-    db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).get().then(snapshot => {
+    database.doc(company).collection("Data").doc(location).collection(floor).get().then(snapshot => {
         snapshot.forEach(doc => {
             if (doc.data()["Occupancy"]["Occupied"] == true){
                 if (occupiedSpots.includes(doc.id) == false){
@@ -204,10 +206,30 @@ function queryDatabase(company, location, floor){
 }
 
 function databaseListner(company, location, floor){
-    db.collection("Companies").doc(company).collection("Data").doc(location).collection(floor).onSnapshot(function(snapshot) {
+    database.doc(company).collection("Data").doc(location).collection(floor).onSnapshot(function(snapshot) {
         snapshot.docChanges().forEach(function(change) {
             if (change.type === "modified") {
-                removeDuplicates(change);
+              if (change.doc.data()["Occupancy"]["Occupied"] == true){
+                  if (occupiedSpots.includes(change.doc.id) == false){
+                      occupiedSpots.push(change.doc.id);
+                  }
+                  if (unoccupiedSpots.includes(change.doc.id)){
+                      var index = unoccupiedSpots.indexOf(change.doc.id);
+                      if (index > -1) {
+                        unoccupiedSpots.splice(index, 1);
+                      }
+                  }
+              }else{
+                  if (unoccupiedSpots.includes(change.doc.id) == false){
+                      unoccupiedSpots.push(change.doc.id);
+                  }
+                  if (occupiedSpots.includes(change.doc.id)){
+                      var index = occupiedSpots.indexOf(change.doc.id);
+                      if (index > -1) {
+                        occupiedSpots.splice(index, 1);
+                      }
+                  }
+              }
             }
             updateFloorInfo(company, location, floor, occupiedSpots.length);
             updateStructureInfo(company, location, occupiedSpots.length);
@@ -215,32 +237,8 @@ function databaseListner(company, location, floor){
     });
 }
 
-function removeDuplicates(change){
-    if (change.doc.data()["Occupancy"]["Occupied"] == true){
-        if (occupiedSpots.includes(change.doc.id) == false){
-            occupiedSpots.push(change.doc.id);
-        }
-        if (unoccupiedSpots.includes(change.doc.id)){
-            var index = unoccupiedSpots.indexOf(change.doc.id);
-            if (index > -1) {
-              unoccupiedSpots.splice(index, 1);
-            }
-        }
-    }else{
-        if (unoccupiedSpots.includes(change.doc.id) == false){
-            unoccupiedSpots.push(change.doc.id);
-        }
-        if (occupiedSpots.includes(change.doc.id)){
-            var index = occupiedSpots.indexOf(change.doc.id);
-            if (index > -1) {
-              occupiedSpots.splice(index, 1);
-            }
-        }
-    }
-}
-
 function updateFloorInfo(company, location, floor, available){
-    db.collection("Companies").doc(company).collection("Data").doc(location).update({
+    database.doc(company).collection("Data").doc(location).update({
         ["Floor Data." + floor + ".Available"]: (capacity - available),
     }).catch(err => {
         log('Error getting documents', err);
@@ -248,7 +246,7 @@ function updateFloorInfo(company, location, floor, available){
 }
 
 function updateStructureInfo(company, structure, available){
-    db.collection("Companies").doc(company).collection("Data").doc(structure).update({
+    database.doc(company).collection("Data").doc(structure).update({
         "Capacity.Available": (capacity - available),
         "Spot Status.Occupied": occupiedSpots.map(Number),
         "Spot Status.Unoccupied": unoccupiedSpots.map(Number),
