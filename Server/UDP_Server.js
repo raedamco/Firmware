@@ -10,14 +10,11 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 var udp = require('dgram');
 const admin = require('firebase-admin');
-
 let serviceAccount = require('./serverKey.json');
-
-const debug = true;
-var PORT = 15000
-
-//Server bot post to slack
 var slack = require('slack-notify')('https://hooks.slack.com/services/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');
+
+const production = false;
+var PORT = 15000
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -64,7 +61,7 @@ server.on('message',function(msg, info) {
             var Occupant = "";
         }
 
-        log("SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
+        log("COMPANY: | LOCATION: | FLOOR: | SENSOR ID: [" + SensorID + "] | DISTANCE: [" + Distance + "] | OCCUPIED: [" + Occupied + "]");
         appendData(company, location, floor, String(SensorID), Occupied, Occupant, Time, Distance);
         queryDatabase(company, location, floor);
         databaseListner(company, location, floor);
@@ -83,15 +80,16 @@ async function appendData(company, location, floor, sensorID, state, occupant, t
         if (!doc.exists){
           log('DOCUMENT DOES NOT EXIST FOR SENSOR ID: ' + sensorID);
         }else{
-          test_function(company, location, floor, sensorID, state, occupant, time, distance);
+          spotLogCheck(company, location, floor, sensorID, state, occupant, time, distance);
         }
     }).catch(err => {
         log('Error getting document' + err);
     });
 }
 
-async function test_function(company, location, floor, sensorID, state, occupant, time, distance){
-    database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").get().then(snap => { //CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
+//CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
+async function spotLogCheck(company, location, floor, sensorID, state, occupant, time, distance){
+    database.doc(company).collection("Data").doc(location).collection(floor).doc(sensorID).collection("Data").get().then(snap => {
         if (snap.size == 0) {
             addSpotDocument(company, location, floor, sensorID, state, occupant, time, distance);
         }else{
@@ -161,19 +159,7 @@ function updateDocumentInfo(company, location, floor, sensorID, state, occupant)
     });
 }
 
-//emits when socket is ready and listening for datagram msgs
-server.on('listening',function(){
-  var address = server.address();
-  log("SERVER LISTENING ON PORT : " + address.port + " | SERVER IP: " + address.address + " | SERVER TYPE: " + address.family);
-});
-
-//emits after the socket is closed using socket.close();
-server.on('close',function(){
-  log('Socket is closed !');
-});
-
-server.bind(PORT);
-
+//Get current database info
 function queryDatabase(company, location, floor){
     database.doc(company).collection("Data").doc(location).get().then(doc => {
         capacity = doc.data()["Capacity"]["Capacity"];
@@ -196,6 +182,7 @@ function queryDatabase(company, location, floor){
     });
 }
 
+//Attach database listener to notice any changes and ensure all data matches
 function databaseListner(company, location, floor){
     database.doc(company).collection("Data").doc(location).collection(floor).onSnapshot(function(snapshot) {
         snapshot.docChanges().forEach(function(change) {
@@ -228,6 +215,7 @@ function databaseListner(company, location, floor){
     });
 }
 
+//Update structures' floor info
 function updateFloorInfo(company, location, floor, available){
     database.doc(company).collection("Data").doc(location).update({
         ["Floor Data." + floor + ".Available"]: (capacity - available),
@@ -236,6 +224,7 @@ function updateFloorInfo(company, location, floor, available){
     });
 }
 
+//Update structures' field info
 function updateStructureInfo(company, structure, available){
     database.doc(company).collection("Data").doc(structure).update({
         "Capacity.Available": (capacity - available),
@@ -246,6 +235,7 @@ function updateStructureInfo(company, structure, available){
     });
 }
 
+//Send slack notifications to #server channel if there are any issues
 function sendSlackBotMessage(errorMessage){
     slack.send({
         'username': 'Server Error Bot',
@@ -264,9 +254,22 @@ function sendSlackBotMessage(errorMessage){
     })
 }
 
+//emits when socket is ready and listening for datagram msgs
+server.on('listening',function(){
+  var address = server.address();
+  log("SERVER LISTENING ON PORT : " + address.port + " | SERVER IP: " + address.address + " | SERVER TYPE: " + address.family);
+});
+
+//emits after the socket is closed using socket.close();
+server.on('close',function(){
+  log('Socket is closed !');
+});
+
+server.bind(PORT);
+
 //Only log when debugging not production
 function log(message) {
-  if (debug) {
+  if !(debug) {
     console.log(message);
   }
 }
