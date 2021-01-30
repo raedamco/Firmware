@@ -215,12 +215,11 @@ function databaseListner(company, location, floor){
     });
 }
 
-//Update structures' floor info
+//Update structures' floor info status. NOTE: THIS CAN BE OPTIMIZED BY UPDATING THE ARRAY FOR SPECIFIC SPOTS, NOT THE ENTIRE ARRAY
 function updateFloorInfo(company, location, floor, occupiedSpots, unoccupiedSpots){
     database.doc(company).collection("Data").doc(location).update({
         ["Floor Data." + floor + ".Occupied"]: occupiedSpots.map(Number),
         ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots.map(Number),
-        //change this to MAP of occupied and unoccupied spots under floors
     }).catch(err => {
         log('Error getting documents', err);
     });
