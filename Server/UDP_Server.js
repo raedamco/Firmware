@@ -209,16 +209,18 @@ function databaseListner(company, location, floor){
                   }
               }
             }
-            updateFloorInfo(company, location, floor, occupiedSpots.length);
+            updateFloorInfo(company, location, floor, occupiedSpots, unoccupiedSpots);
             updateStructureInfo(company, location, occupiedSpots.length);
         });
     });
 }
 
 //Update structures' floor info
-function updateFloorInfo(company, location, floor, available){
+function updateFloorInfo(company, location, floor, occupiedSpots, unoccupiedSpots){
     database.doc(company).collection("Data").doc(location).update({
-        ["Floor Data." + floor + ".Available"]: (capacity - available),
+        ["Floor Data." + floor ".Occupied"] = occupiedSpots
+        ["Floor Data." + floor ".Unoccupied"] = unoccupiedSpots
+        //change this to MAP of occupied and unoccupied spots under floors
     }).catch(err => {
         log('Error getting documents', err);
     });
