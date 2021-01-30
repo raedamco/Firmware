@@ -229,9 +229,7 @@ function updateFloorInfo(company, location, floor, occupiedSpots, unoccupiedSpot
 //Update structures' field info
 function updateStructureInfo(company, structure, available){
     database.doc(company).collection("Data").doc(structure).update({
-        "Capacity.Available": (capacity - available),
-        "Spot Status.Occupied": occupiedSpots.map(Number),
-        "Spot Status.Unoccupied": unoccupiedSpots.map(Number),
+        "Capacity.Available": (capacity - available)
     }).catch(err => {
         log('Error getting documents', err);
     });
