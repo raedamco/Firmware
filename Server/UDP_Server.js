@@ -217,6 +217,10 @@ function databaseListner(company, location, floor){
 
 //Update structures' floor info status. NOTE: THIS CAN BE OPTIMIZED BY UPDATING THE ARRAY FOR SPECIFIC SPOTS, NOT THE ENTIRE ARRAY
 function updateFloorInfo(company, location, floor, occupiedSpots, unoccupiedSpots){
+    //Sort array before updating database
+    sortArray(occupiedSpots);
+    sortArray(unoccupiedSpots);
+
     database.doc(company).collection("Data").doc(location).update({
         ["Floor Data." + floor + ".Occupied"]: occupiedSpots.map(Number),
         ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots.map(Number),
@@ -265,6 +269,14 @@ server.on('close',function(){
 });
 
 server.bind(PORT);
+
+
+//Sort array
+function sortArray(array){
+  array.sort(function(a, b) {
+    return a - b;
+  });
+}
 
 //Only log when debugging not production
 function log(message) {
