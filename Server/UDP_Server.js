@@ -272,11 +272,16 @@ server.bind(PORT);
 
 
 //Sort array
-function sortArray(array){
-  array.sort(function(a, b) {
+function sortArray(...array){
+  return arguments.sort(function(a,b){
     return a - b;
   });
 }
+// function sortArray(array){
+//   array.sort(function(a, b) {
+//     return a - b;
+//   });
+// }
 
 //Only log when debugging not production
 function log(message) {
