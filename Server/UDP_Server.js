@@ -273,7 +273,7 @@ server.bind(PORT);
 
 //Sort array
 function sortArray(...array){
-  return arguments.sort(function(a,b){
+  return array.sort(function(a,b){
     return a - b;
   });
 }
