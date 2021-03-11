@@ -411,7 +411,6 @@ function updateFloorInfo(
   sortArray(unoccupiedSpots);
 
   database
-    .collection("Companies")
     .doc(company)
     .collection("Data")
     .doc(location)
@@ -427,7 +426,6 @@ function updateFloorInfo(
 //Update structures' field info
 function updateStructureInfo(company, structure, available) {
   database
-    .collection("Companies")
     .doc(company)
     .collection("Data")
     .doc(structure)
