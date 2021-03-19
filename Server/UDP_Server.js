@@ -415,11 +415,11 @@ function updateFloorInfo(
     .collection("Data")
     .doc(location)
     .update({
-      ["Floor Data." + floor + ".Occupied"]: occupiedSpots
+      ["Floor Data." + floor + ".Occupied"]: occupiedSpots,
       // // .map((value) =>
       // //   Number(value)
       // ),
-      ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots
+      ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots,
       // .map((value) =>
       //   Number(value)
       // ),
