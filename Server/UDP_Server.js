@@ -415,12 +415,14 @@ function updateFloorInfo(
     .collection("Data")
     .doc(location)
     .update({
-      ["Floor Data." + floor + ".Occupied"]: occupiedSpots.map((value) =>
-        Number(value)
-      ),
-      ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots.map((value) =>
-        Number(value)
-      ),
+      ["Floor Data." + floor + ".Occupied"]: occupiedSpots
+      // // .map((value) =>
+      // //   Number(value)
+      // ),
+      ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots
+      // .map((value) =>
+      //   Number(value)
+      // ),
     })
     .catch((err) => {
       log("Error getting documents", err);
