@@ -8,7 +8,7 @@
 // This file holds code for the UDP communication between the sensors -> server -> database
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-import firebase from "firebase";
+//import firebase from "firebase";
 var udp = require("dgram");
 const admin = require("firebase-admin");
 let serviceAccount = require("./serverKey.json");
