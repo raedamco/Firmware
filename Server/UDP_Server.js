@@ -31,9 +31,9 @@ var occupiedSpots = [];
 var unoccupiedSpots = [];
 var capacity;
 
-firebase.firestore().settings({
-  ignoreUndefinedProperties: true,
-});
+// firebase.firestore().settings({
+//   ignoreUndefinedProperties: true,
+// });
 // emits when any error occurs
 server.on("error", function (error) {
   log("Error: " + error);
