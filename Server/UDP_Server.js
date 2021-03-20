@@ -31,7 +31,7 @@ var occupiedSpots = [];
 var unoccupiedSpots = [];
 var capacity;
 
-admin.settings({
+db.settings({
   ignoreUndefinedProperties: true,
 });
 // emits when any error occurs
