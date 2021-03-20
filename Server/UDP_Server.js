@@ -8,6 +8,7 @@
 // This file holds code for the UDP communication between the sensors -> server -> database
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+import firebase from "firebase";
 var udp = require("dgram");
 const admin = require("firebase-admin");
 let serviceAccount = require("./serverKey.json");
@@ -17,9 +18,6 @@ var slack = require("slack-notify")(
 
 const debug = true;
 var PORT = 15000;
-firebase.firestore().settings({
-  ignoreUndefinedProperties: true,
-});
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -33,6 +31,9 @@ var occupiedSpots = [];
 var unoccupiedSpots = [];
 var capacity;
 
+firebase.firestore().settings({
+  ignoreUndefinedProperties: true,
+});
 // emits when any error occurs
 server.on("error", function (error) {
   log("Error: " + error);
