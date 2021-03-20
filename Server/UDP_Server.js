@@ -413,27 +413,23 @@ function updateFloorInfo(
   //Sort array before updating database
   sortArray(occupiedSpots);
   sortArray(unoccupiedSpots);
-  if(occupiedSpots!= undefined && unoccupiedSpots != undefined)
-  {
+  if (occupiedSpots != undefined && unoccupiedSpots != undefined) {
     database
-    .doc(company)
-    .collection("Data")
-    .doc(location)
-    .update({
-      ["Floor Data." + floor + ".Occupied"]: occupiedSpots,
-      // // .map((value) =>
-      // //   Number(value)
-      // ),
-      ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots,
-      // .map((value) =>
-      //   Number(value)
-      // ),
-    })
-    .catch((err) => {
-      log("Error getting documents", err);
-    });
+      .doc(company)
+      .collection("Data")
+      .doc(location)
+      .update({
+        ["Floor Data." + floor + ".Occupied"]: occupiedSpots.map((value) =>
+          Number(value)
+        ),
+        ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots.map((value) =>
+          Number(value)
+        ),
+      })
+      .catch((err) => {
+        log("Error getting documents", err);
+      });
   }
-
 }
 
 //Update structures' field info
