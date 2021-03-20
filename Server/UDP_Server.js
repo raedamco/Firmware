@@ -31,7 +31,7 @@ var occupiedSpots = [];
 var unoccupiedSpots = [];
 var capacity;
 
-admin.firebase.firestore().settings({
+admin.settings({
   ignoreUndefinedProperties: true,
 });
 // emits when any error occurs
