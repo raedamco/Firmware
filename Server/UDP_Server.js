@@ -413,8 +413,9 @@ function updateFloorInfo(
   //Sort array before updating database
   sortArray(occupiedSpots);
   sortArray(unoccupiedSpots);
-
-  database
+  if(occupiedSpots!= undefined && unoccupiedSpots != undefined)
+  {
+    database
     .doc(company)
     .collection("Data")
     .doc(location)
@@ -431,6 +432,8 @@ function updateFloorInfo(
     .catch((err) => {
       log("Error getting documents", err);
     });
+  }
+
 }
 
 //Update structures' field info
