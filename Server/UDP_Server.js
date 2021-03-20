@@ -17,6 +17,9 @@ var slack = require("slack-notify")(
 
 const debug = true;
 var PORT = 15000;
+firebase.firestore().settings({
+  ignoreUndefinedProperties: true,
+});
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
