@@ -20,21 +20,26 @@ exports.batteryLevelNotify = functions.firestore
     const db = admin.firestore();
     const mainUnits = snap.after.data()["Main Units"]; // array of units in floor
     const users = db.collection(`Users`).doc(`Companies`).collection(`Users`);
-    updateUsers(users, context, mainUnits);
+    if (mainUnits["Unit 1"]["Battery Level"] < 25) {
+      updateUsers(users, context, mainUnits);
+    }
 
     return null; //snap.ref.set({mainUnits}, {merge: false});
   });
 
 async function updateUsers(users, context, mainUnits) {
+  functions.logger.log("in update Users !!!!!!!");
   const userMatches = await users
     .where("Companies", `array-contains`, `${context.params.companyName}`)
     .get();
-  if (!userMatches.empty) {
+  if (userMatches.length != 0) {
     userMatches.forEach((doc) => {
+      functions.logger.log("in forEach ????");
       const theMessages = doc.data().messages;
-      theMessages.push(
-        `Battery Level for ${context.params.structure} is ${mainUnits["Unit 1"]["Battery Level"]}%`
-      );
+      theMessages.push({
+        title: " Battery Low",
+        message: `Battery Level for ${context.params.structure} is ${mainUnits["Unit 1"]["Battery Level"]}%`,
+      });
       users.doc(`${doc.id}`).update({
         messages: theMessages,
       });
