@@ -65,7 +65,7 @@ server.on("message", async function (msg, info) {
     // var floor = "Floor 2";
     var SensorID = msg.readUIntLE(0, 1);
 
-    var sensorData = await db.collection("Sensors").doc(SensorID).get();
+    var sensorData = await db.collection("Sensors").doc(String(SensorID)).get();
     var company = sensorData.data().Company;
     var location = sensorData.data().Location;
     var floor = sensorData.data().Floor;
