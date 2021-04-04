@@ -60,9 +60,6 @@ server.on("message", async function (msg, info) {
     );
 
     //temp variables. These will be retrieved from UDP sent by Boron unit
-    // var company = "Portland State University";
-    // var location = "Parking Structure 1";
-    // var floor = "Floor 2";
     var UniqueID = msg.readUIntLE(0, 1);
 
     var sensorData = await db.collection("Sensors").doc(String(UniqueID)).get();
