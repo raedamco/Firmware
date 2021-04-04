@@ -63,12 +63,13 @@ server.on("message", async function (msg, info) {
     // var company = "Portland State University";
     // var location = "Parking Structure 1";
     // var floor = "Floor 2";
-    var SensorID = msg.readUIntLE(0, 1);
+    var UniqueID = msg.readUIntLE(0, 1);
 
-    var sensorData = await db.collection("Sensors").doc(String(SensorID)).get();
+    var sensorData = await db.collection("Sensors").doc(String(UniqueID)).get();
     var company = sensorData.data().Company;
     var location = sensorData.data().Location;
     var floor = sensorData.data().Floor;
+    var SensorID = sensorData.data().SpotID;
 
     var Distance = ((msg.readUIntLE(1, 2) * 0.000001 * 343) / 2) * 39.37;
     Distance = Distance.toFixed(3);
