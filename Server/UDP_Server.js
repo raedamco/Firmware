@@ -41,7 +41,7 @@ server.on("error", function (error) {
 });
 
 // listen for packets
-server.on("message", function (msg, info) {
+server.on("message", async function (msg, info) {
   if (msg.length == 8 || msg.length == 3) {
     var Time = new Date();
     log(
@@ -60,11 +60,13 @@ server.on("message", function (msg, info) {
     );
 
     //temp variables. These will be retrieved from UDP sent by Boron unit
-    var company = "Portland State University";
-    var location = "Parking Structure 1";
-    var floor = "Floor 2";
+    var UniqueID = msg.readUIntLE(0, 1);
 
-    var SensorID = msg.readUIntLE(0, 1);
+    var sensorData = await db.collection("Sensors").doc(String(UniqueID)).get();
+    var company = sensorData.data().Company;
+    var location = sensorData.data().Location;
+    var floor = sensorData.data().Floor;
+    var SensorID = sensorData.data().SpotID;
 
     var Distance = ((msg.readUIntLE(1, 2) * 0.000001 * 343) / 2) * 39.37;
     Distance = Distance.toFixed(3);
