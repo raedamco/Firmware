@@ -10,7 +10,7 @@ async function create(company, location, subLocation, averageData) {
 }
 
 // random date genertor/ data generator
-
+//TODO check for duplicate dates
 function randomDate(start, end) {
   var date = new Date(+start + Math.random() * (end - start));
   return date;
