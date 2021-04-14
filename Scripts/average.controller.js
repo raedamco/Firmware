@@ -22,7 +22,7 @@ function randomNum(min, max) {
 const averageAmount = 750;
 const tempAveragesData = [];
 const tempDates = {
-  start: new Date(2021, 2, 12), // 2-12-2021
+  start: new Date(2020, 2, 12), // 2-12-2020
   end: new Date(), // today
 };
 const tempPath = {

@@ -12,31 +12,42 @@ const tempPath = {
   subLocation: "Lot 1",
 };
 // TODO set default values for the object so less copy and paste
-const tempSpotsData = [
-  {
-    Info: {
-      ["Spot ID"]: 11,
-    },
-    Layout: {
-      rotation: 0,
-      x: 0,
-      y: 0,
-    },
-    Occupancy: {
-      Occupant: "",
-      Occupied: false,
-    },
-    ["Spot Type"]: {
-      ADA: false,
-      EV: false,
-      Hourly: false,
-      Leased: false,
-      Permit: false,
-    },
-  },
-];
-
-tempSpotsData.map((spotData) => {
+function tempRead() {
   const { company, location, subLocation } = tempPath;
-  create(company, location, subLocation, spotData);
-});
+  read(company, location, subLocation, 1);
+}
+async function read(company, location, subLocation, id) {
+  console.log(
+    "controller got : ",
+    await service.read(company, location, subLocation, id)
+  );
+}
+tempRead();
+// const tempSpotsData = [
+//   {
+//     Info: {
+//       ["Spot ID"]: 11,
+//     },
+//     Layout: {
+//       rotation: 0,
+//       x: 0,
+//       y: 0,
+//     },
+//     Occupancy: {
+//       Occupant: "",
+//       Occupied: false,
+//     },
+//     ["Spot Type"]: {
+//       ADA: false,
+//       EV: false,
+//       Hourly: false,
+//       Leased: false,
+//       Permit: false,
+//     },
+//   },
+// ];
+
+// tempSpotsData.map((spotData) => {
+//   const { company, location, subLocation } = tempPath;
+//   create(company, location, subLocation, spotData);
+// });
