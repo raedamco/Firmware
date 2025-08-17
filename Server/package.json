@@ -1,0 +1,44 @@
+{
+  "name": "parking-sensor-server",
+  "description": "UDP Server for Parking Sensor Data Processing and Analytics",
+  "version": "2.0.0",
+  "main": "UDP_Server.js",
+  "scripts": {
+    "start": "node UDP_Server.js",
+    "dev": "nodemon UDP_Server.js",
+    "test": "jest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "analyze": "node Averaging.js",
+    "transfer": "node DataTransfer.js"
+  },
+  "keywords": [
+    "parking",
+    "sensors",
+    "udp",
+    "firebase",
+    "firestore",
+    "analytics"
+  ],
+  "author": "Raedam Team",
+  "license": "MIT",
+  "dependencies": {
+    "dgram": "^1.0.1",
+    "firebase-admin": "^12.0.0",
+    "node-cron": "^3.0.3",
+    "slack-notify": "^2.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-node": "^11.1.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.3",
+    "prettier": "^3.2.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

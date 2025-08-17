@@ -1,96 +1,178 @@
-//
-//  Arduino-ESP.ino
-//  Raedam
-//
-//  Created on 1/10/2019. Modified on 8/27/2020.
-//  Copyright © 2020 Raedam Inc. All rights reserved.
-//
+/**
+ * ESP32 Mesh Node Firmware for Parking Sensor System
+ * 
+ * This firmware implements a mesh network node that:
+ * - Receives data from other sensors via mesh network
+ * - Forwards data to the next node in the chain
+ * - Collects its own ultrasonic sensor data
+ * - Maintains mesh network connectivity
+ * 
+ * @author Raedam Team
+ * @version 2.0.0
+ * @since 2019
+ */
 
 #include "config.h"
 #include "ultrasonic.h"
 #include "namedMesh.h"
 
-Scheduler userScheduler;
-namedMesh mesh;
+// ============================================================================
+// Global Objects and Variables
+// ============================================================================
 
+Scheduler userScheduler;
+NamedMesh mesh;
+Ultrasonic ultrasonic(PIN_TRIG, PIN_ECHO, OCCUPIED_DISTANCE_CM);
+
+String nodeName = String(UNIQUE_ID);
 String nextNode = NEXT_NODE_ID;
 unsigned long lastUpdate = 0;
 
-ultrasonic ultra = ultrasonic(PIN_TRIG,PIN_ECHO);
+// ============================================================================
+// Mesh Network Functions
+// ============================================================================
 
-void setupBLEMesh(){
-    mesh.init(MESH_SSID, MESH_PASSWORD, &userScheduler, MESH_PORT); //initialize ble mesh
-    String NodeName = String(UNIQUE_ID);
-    mesh.setName(NodeName); //assign number to this node
-
-   //forward the previous msgs to the next node in line
-     mesh.onReceive([](String &from, String &msg) { //ble mesh recieved msg
-       String fromSensor = from.c_str(); //get node number that sent msg
-       String messageFromSensor = msg.c_str(); //msg recieved
-       
-       #ifdef DEBUGGING
-         Serial.println(String("GOT DATA FROM Sensor: " + fromSensor + " Message: " + messageFromSensor)); //log what node sent the info and what the msg was passed along
-       #endif
-      
-       mesh.sendSingle(nextNode, messageFromSensor); //forward recieved msg to next node in chain until it reaches sensor w/ WiFi connection
-    });
+/**
+ * Initialize mesh network with forwarding capabilities
+ */
+void setupMesh() {
+  mesh.init(MESH_SSID, MESH_PASSWORD, &userScheduler, MESH_PORT);
+  mesh.setName(nodeName);
+  
+  // Handle received messages from other sensors
+  mesh.onReceive([](String& from, String& msg) {
+    #ifdef DEBUGGING
+      Serial.printf("[Mesh] Received from %s: %s\n", from.c_str(), msg.c_str());
+    #endif
     
-    mesh.onChangedConnections([]() {
+    // Forward message to next node in chain
+    if (msg.length() >= PACKET_TOTAL_SIZE) {
+      bool forwarded = mesh.sendSingle(nextNode, msg);
+      
       #ifdef DEBUGGING
-        Serial.printf("Changed connection\n");
+        if (forwarded) {
+          Serial.printf("[Mesh] Forwarded message to %s\n", nextNode.c_str());
+        } else {
+          Serial.printf("[Mesh] Failed to forward message to %s\n", nextNode.c_str());
+        }
       #endif
-    });
-}
-
-void sendPacket(uint8_t sensor_cid, unsigned long r) {
-  unsigned long uid = UNIQUE_ID;          // 4 uint8_t 
-  unsigned long result = r;               // 4 uint8_t
-
-  const unsigned long buffer_length = 4+4;
-  uint8_t buff[buffer_length] = { 0 };
-  {
-    int i=0;
-    memcpy(&buff[i], &uid, sizeof(uid));
-    i+=sizeof(uid);
-    memcpy(&buff[i], &result, sizeof(result));
-    i+=sizeof(result);
-  }
-
-  char sensorData[buffer_length];
-
-  for(int i=0; i<buffer_length; i++){
-      sensorData[i] = buff[i];
-  }
-
-  String forwardString;
-  for(int i=0; i<buffer_length; i++){
-    String convertedString = String(sensorData[i]);
-    forwardString+= convertedString; 
-  }
-
-  const char* t1 = new char [buffer_length];
-  t1 = forwardString.c_str();
-
-  mesh.sendSingle(nextNode, forwardString);
+    }
+  });
+  
+  // Handle connection topology changes
+  mesh.onChangedConnections([]() {
+    #ifdef DEBUGGING
+      Serial.println("[Mesh] Connection topology changed");
+    #endif
+  });
+  
   #ifdef DEBUGGING
-     Serial.println(String("SENT DATA TO NEXT NODE: " + forwardString)); //log what node sent the info and what the msg was passed along
-   #endif 
+    Serial.printf("[Mesh] Initialized as node: %s, forwarding to: %s\n", 
+                  nodeName.c_str(), nextNode.c_str());
+  #endif
 }
+
+// ============================================================================
+// Data Packet Functions
+// ============================================================================
+
+/**
+ * Create and send sensor data packet
+ * @param sensorCid - Sensor component ID
+ * @param distance - Distance measurement in microseconds
+ */
+void sendPacket(uint8_t sensorCid, uint32_t distance) {
+  // Create packet structure
+  struct {
+    uint32_t uid;
+    uint32_t result;
+  } packet = {
+    .uid = UNIQUE_ID,
+    .result = distance
+  };
+  
+  // Convert packet to string for mesh transmission
+  String packetString;
+  for (size_t i = 0; i < sizeof(packet); i++) {
+    packetString += (char)((uint8_t*)&packet)[i];
+  }
+  
+  // Send to next node in chain
+  bool sent = mesh.sendSingle(nextNode, packetString);
+  
+  #ifdef DEBUGGING
+    if (sent) {
+      Serial.printf("[Packet] Sent to %s: UID=%lu, Distance=%lu μs\n", 
+                    nextNode.c_str(), packet.uid, packet.result);
+    } else {
+      Serial.printf("[Packet] Failed to send to %s\n", nextNode.c_str());
+    }
+  #endif
+}
+
+// ============================================================================
+// Sensor Data Collection
+// ============================================================================
+
+/**
+ * Collect sensor data and send packet
+ */
+void collectAndSendData() {
+  // Perform ultrasonic measurement
+  if (ultrasonic.measure()) {
+    uint32_t distance = ultrasonic.getEchoTime();
+    sendPacket(ULTRASONIC_CID, distance);
+    
+    #ifdef DEBUGGING
+      Serial.printf("[Sensor] Collected data: Distance=%.2f cm, Occupied=%s\n",
+                    ultrasonic.getLastDistanceCm(),
+                    ultrasonic.isOccupied() ? "Yes" : "No");
+    #endif
+  } else {
+    #ifdef DEBUGGING
+      Serial.println("[Sensor] Failed to collect sensor data");
+    #endif
+  }
+}
+
+// ============================================================================
+// Arduino Setup and Loop
+// ============================================================================
 
 void setup() {
   #ifdef DEBUGGING
-    Serial.begin(115200);
+    Serial.begin(SERIAL_BAUD_RATE);
+    Serial.println("\n" + String("=") * 50);
+    Serial.printf("[System] ESP32 Mesh Node v%s\n", FIRMWARE_VERSION);
+    Serial.printf("[System] Device ID: %d\n", UNIQUE_ID);
+    Serial.printf("[System] Node Name: %s\n", nodeName.c_str());
+    Serial.printf("[System] Forwarding to: %s\n", nextNode.c_str());
+    Serial.println(String("=") * 50);
   #endif
-  setupBLEMesh();
+  
+  // Initialize ultrasonic sensor
+  ultrasonic.begin();
+  
+  // Initialize mesh network
+  setupMesh();
+  
+  #ifdef DEBUGGING
+    Serial.println("[System] Setup complete, entering main loop");
+  #endif
 }
 
 void loop() {
-  mesh.update(); //run the user scheduler as well
-
-  if(millis() - lastUpdate >= COLLECT_TIME){
-      lastUpdate = millis(); //update old_time to current millis()
-      sendPacket(ULTRASONIC_CID, ultra.get());
+  // Update mesh network
+  mesh.update();
+  
+  // Collect and send sensor data at specified intervals
+  if (millis() - lastUpdate >= (COLLECT_TIME * 1000)) {
+    lastUpdate = millis();
+    collectAndSendData();
   }
+  
+  // Small delay to prevent watchdog issues
+  delay(MESH_UPDATE_INTERVAL);
 }
 
 

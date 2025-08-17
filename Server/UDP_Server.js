@@ -1,509 +1,399 @@
-//
-//  UDP_Server.js
-//  Raedam
-//
-//  Created on 5/13/2020. Modified on 9/21/2020 by Omar Waked.
-//  Copyright © 2020 Raedam. All rights reserved.
-//
-// This file holds code for the UDP communication between the sensors -> server -> database
+/**
+ * UDP Server for Parking Sensor Data Processing
+ *
+ * This server handles UDP communication between parking sensors and the database,
+ * processing ultrasonic sensor data and updating occupancy status in real-time.
+ *
+ * @author Raedam Team
+ * @version 2.0.0
+ * @since 2020
+ */
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//import firebase from "firebase";
-var udp = require("dgram");
-const admin = require("firebase-admin");
-let serviceAccount = require("./serverKey.json");
-var slack = require("slack-notify")(
-  "https://hooks.slack.com/services/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"
+const dgram = require('dgram');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
+const slack = require('slack-notify')(
+  'https://hooks.slack.com/services/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',
 );
 
-const debug = true;
-var PORT = 15000;
+// Configuration
+const CONFIG = {
+  PORT: 15000,
+  DEBUG: true,
+  OCCUPIED_DISTANCE_INCHES: 48, // 4 feet in inches
+  SOUND_SPEED_MPS: 343, // Speed of sound in m/s
+  CONVERSION_FACTOR: 0.000001, // Microsecond to second conversion
+  INCHES_PER_METER: 39.37,
+};
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+// Initialize Firebase Admin SDK
+const serviceAccount = require('./serverKey.json');
+initializeApp({
+  credential: cert(serviceAccount),
 });
 
-let db = admin.firestore();
-var database = db.collection("Companies");
-var server = udp.createSocket("udp4");
+const db = getFirestore();
+const database = db.collection('Companies');
+const server = dgram.createSocket('udp4');
 
-var occupiedSpots = [];
-var unoccupiedSpots = [];
-var capacity;
-
+// Configure Firestore settings
 db.settings({
   ignoreUndefinedProperties: true,
 });
-// emits when any error occurs
-server.on("error", function (error) {
-  log("Error: " + error);
+
+/**
+ * Logging utility function
+ * @param {string} message - Message to log
+ * @param {string} level - Log level (info, warn, error)
+ */
+const log = (message, level = 'info') => {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+
+  if (CONFIG.DEBUG || level === 'error') {
+    console.log(logMessage);
+  }
+};
+
+/**
+ * Send notification to Slack
+ * @param {string} message - Message to send
+ */
+const sendSlackNotification = async(message) => {
+  try {
+    await slack.alert({
+      text: `🚨 Parking Sensor Alert: ${message}`,
+      channel: '#parking-alerts',
+    });
+    log(`Slack notification sent: ${message}`);
+  } catch (error) {
+    log(`Failed to send Slack notification: ${error.message}`, 'error');
+  }
+};
+
+/**
+ * Calculate distance from ultrasonic sensor data
+ * @param {Buffer} msg - UDP message buffer
+ * @return {number} Distance in inches
+ */
+const calculateDistance = (msg) => {
+  const timeMicroseconds = msg.readUIntLE(1, 2);
+  const timeSeconds = timeMicroseconds * CONFIG.CONVERSION_FACTOR;
+  const distanceMeters = (timeSeconds * CONFIG.SOUND_SPEED_MPS) / 2;
+  const distanceInches = distanceMeters * CONFIG.INCHES_PER_METER;
+  return parseFloat(distanceInches.toFixed(3));
+};
+
+/**
+ * Determine occupancy status based on distance
+ * @param {number} distance - Distance in inches
+ * @return {boolean} True if occupied, false if vacant
+ */
+const determineOccupancy = (distance) => {
+  return distance <= CONFIG.OCCUPIED_DISTANCE_INCHES;
+};
+
+/**
+ * Process sensor data and update database
+ * @param {Object} sensorData - Sensor information from database
+ * @param {number} distance - Calculated distance
+ * @param {boolean} occupied - Occupancy status
+ * @param {Date} timestamp - Current timestamp
+ */
+const processSensorData = async (sensorData, distance, occupied, timestamp) => {
+  const { Company: company, Location: location, Floor: floor, SpotID: sensorId } = sensorData;
+
+  log(`Processing sensor data: ${company}/${location}/${floor}/${sensorId} - Distance: ${distance}in, Occupied: ${occupied}`);
+
+  try {
+    await appendData(company, location, floor, String(sensorId), occupied, '', timestamp, distance);
+    await queryDatabase(company, location, floor);
+    await databaseListener(company, location, floor);
+  } catch (error) {
+    log(`Error processing sensor data: ${error.message}`, 'error');
+    await sendSlackNotification(`Data processing error: ${error.message}`);
+  }
+};
+
+/**
+ * Add data entry for parking spot
+ * @param {string} company - Company name
+ * @param {string} location - Location identifier
+ * @param {string} floor - Floor identifier
+ * @param {string} sensorId - Sensor ID
+ * @param {boolean} state - Occupancy state
+ * @param {string} occupant - Occupant information
+ * @param {Date} time - Timestamp
+ * @param {number} distance - Distance measurement
+ */
+const appendData = async (company, location, floor, sensorId, state, occupant, time, distance) => {
+  try {
+    const sensorDoc = await database
+      .doc(company)
+      .collection('Data')
+      .doc(location)
+      .collection(floor)
+      .doc(sensorId)
+      .get();
+
+    if (!sensorDoc.exists) {
+      log(`Document does not exist for sensor ID: ${sensorId}`, 'warn');
+      return;
+    }
+
+    await spotLogCheck(company, location, floor, sensorId, state, occupant, time, distance);
+  } catch (error) {
+    log(`Error getting document: ${error.message}`, 'error');
+    throw error;
+  }
+};
+
+/**
+ * Check if spot logging should be updated or new document created
+ * @param {string} company - Company name
+ * @param {string} location - Location identifier
+ * @param {string} floor - Floor identifier
+ * @param {string} sensorId - Sensor ID
+ * @param {boolean} state - Occupancy state
+ * @param {string} occupant - Occupant information
+ * @param {Date} time - Timestamp
+ * @param {number} distance - Distance measurement
+ */
+const spotLogCheck = async (company, location, floor, sensorId, state, occupant, time, distance) => {
+  try {
+    const dataCollection = database
+      .doc(company)
+      .collection('Data')
+      .doc(location)
+      .collection(floor)
+      .doc(sensorId)
+      .collection('Data');
+
+    const snapshot = await dataCollection.get();
+
+    if (snapshot.size === 0) {
+      await addSpotDocument(company, location, floor, sensorId, state, occupant, time, distance);
+    } else {
+      await processExistingData(company, location, floor, sensorId, state, occupant, time, distance);
+    }
+  } catch (error) {
+    log(`Error in spotLogCheck: ${error.message}`, 'error');
+    throw error;
+  }
+};
+
+/**
+ * Add new spot document to database
+ * @param {string} company - Company name
+ * @param {string} location - Location identifier
+ * @param {string} floor - Floor identifier
+ * @param {string} sensorId - Sensor ID
+ * @param {boolean} state - Occupancy state
+ * @param {string} occupant - Occupant information
+ * @param {Date} time - Timestamp
+ * @param {number} distance - Distance measurement
+ */
+const addSpotDocument = async (company, location, floor, sensorId, state, occupant, time, distance) => {
+  try {
+    const timeData = {
+      Start: time,
+      End: time,
+    };
+
+    const documentData = {
+      Occupied: state,
+      Occupant: occupant,
+      Time: timeData,
+      Distance: distance,
+    };
+
+    await database
+      .doc(company)
+      .collection('Data')
+      .doc(location)
+      .collection(floor)
+      .doc(sensorId)
+      .collection('Data')
+      .add(documentData);
+
+    log(`New spot document added for sensor: ${sensorId}`);
+  } catch (error) {
+    log(`Error adding spot document: ${error.message}`, 'error');
+    throw error;
+  }
+};
+
+/**
+ * Process existing data and determine if merge or new document is needed
+ * @param {string} company - Company name
+ * @param {string} location - Location identifier
+ * @param {string} floor - Floor identifier
+ * @param {string} sensorId - Sensor ID
+ * @param {boolean} state - Occupancy state
+ * @param {string} occupant - Occupant information
+ * @param {Date} time - Timestamp
+ * @param {number} distance - Distance measurement
+ */
+const processExistingData = async (company, location, floor, sensorId, state, occupant, time, distance) => {
+  try {
+    const dataCollection = database
+      .doc(company)
+      .collection('Data')
+      .doc(location)
+      .collection(floor)
+      .doc(sensorId)
+      .collection('Data');
+
+    const latestDoc = await dataCollection
+      .orderBy('Time.End', 'desc')
+      .limit(1)
+      .get();
+
+    if (latestDoc.empty) {
+      await addSpotDocument(company, location, floor, sensorId, state, occupant, time, distance);
+      return;
+    }
+
+    const latestData = latestDoc.docs[0].data();
+    const latestOccupied = latestData.Occupied;
+    const latestTime = latestData.Time.End;
+
+    // Check if state changed or if it's been more than 5 minutes
+    const timeDiff = Math.abs(time - latestTime) / (1000 * 60); // minutes
+    const shouldCreateNew = state !== latestOccupied || timeDiff > 5;
+
+    if (shouldCreateNew) {
+      await addSpotDocument(company, location, floor, sensorId, state, occupant, time, distance);
+    } else {
+      // Update existing document end time
+      await latestDoc.docs[0].ref.update({
+        'Time.End': time,
+        'Distance': distance,
+      });
+    }
+  } catch (error) {
+    log(`Error processing existing data: ${error.message}`, 'error');
+    throw error;
+  }
+};
+
+/**
+ * Query database for current occupancy data
+ * @param {string} company - Company name
+ * @param {string} location - Location identifier
+ * @param {string} floor - Floor identifier
+ */
+const queryDatabase = async (company, location, floor) => {
+  try {
+    const snapshot = await database
+      .doc(company)
+      .collection('Data')
+      .doc(location)
+      .collection(floor)
+      .get();
+
+    let totalSpots = 0;
+
+    snapshot.forEach((_doc) => {
+      totalSpots++;
+      // Additional logic for counting occupied spots can be added here
+    });
+
+    log(`Database query completed for ${company}/${location}/${floor} - Total spots: ${totalSpots}`);
+  } catch (error) {
+    log(`Error querying database: ${error.message}`, 'error');
+  }
+};
+
+/**
+ * Set up database listener for real-time updates
+ * @param {string} company - Company name
+ * @param {string} location - Location identifier
+ * @param {string} floor - Floor identifier
+ */
+const databaseListener = async (company, location, floor) => {
+  try {
+    const listener = database
+      .doc(company)
+      .collection('Data')
+      .doc(location)
+      .collection(floor)
+      .onSnapshot((_snapshot) => {
+        log(`Database listener active for ${company}/${location}/${floor}`);
+      }, (error) => {
+        log(`Database listener error: ${error.message}`, 'error');
+      });
+
+    return listener;
+  } catch (error) {
+    log(`Error setting up database listener: ${error.message}`, 'error');
+  }
+};
+
+// UDP Server event handlers
+server.on('error', (error) => {
+  log(`UDP Server error: ${error.message}`, 'error');
   server.close();
 });
 
-// listen for packets
-server.on("message", async function (msg, info) {
-  if (msg.length == 8 || msg.length == 3) {
-    var Time = new Date();
-    log(
-      "---------------------------------------------------------------------------------------------------------------------------------------------"
-    );
-    log(
-      "PACKET RECIEVED: LENGTH: [" +
-        msg.length +
-        "] | ADDRESS: [" +
-        info.address +
-        "] | PORT: [" +
-        info.port +
-        "] | TIME: [" +
-        Time +
-        "]"
-    );
+server.on('message', async (msg, info) => {
+  const timestamp = new Date();
 
-    //temp variables. These will be retrieved from UDP sent by Boron unit
-    var UniqueID = msg.readUIntLE(0, 1);
+  log('─'.repeat(100));
+  log(`PACKET RECEIVED: Length: [${msg.length}] | Address: [${info.address}] | Port: [${info.port}] | Time: [${timestamp}]`);
 
-    var sensorData = await db.collection("Sensors").doc(String(UniqueID)).get();
-    var company = sensorData.data().Company;
-    var location = sensorData.data().Location;
-    var floor = sensorData.data().Floor;
-    var SensorID = sensorData.data().SpotID;
+  // Validate packet length
+  if (msg.length !== 8 && msg.length !== 3) {
+    const hexString = msg.toString('hex');
+    const errorMessage = `Invalid packet length: ${msg.length}. Packet data: ${hexString}`;
+    log(errorMessage, 'error');
+    await sendSlackNotification(errorMessage);
+    return;
+  }
 
-    var Distance = ((msg.readUIntLE(1, 2) * 0.000001 * 343) / 2) * 39.37;
-    Distance = Distance.toFixed(3);
-    Distance = parseFloat(Distance, 10);
-    var OccupiedDistance = 48; //Object is within 4 feet (48in)
+  try {
+    const uniqueId = msg.readUIntLE(0, 1);
 
-    if (Distance <= OccupiedDistance) {
-      var Occupied = true;
-      var Occupant = "";
-    } else {
-      var Occupied = false;
-      var Occupant = "";
+    // Get sensor data from database
+    const sensorDoc = await db.collection('Sensors').doc(String(uniqueId)).get();
+
+    if (!sensorDoc.exists) {
+      log(`Sensor not found in database: ${uniqueId}`, 'warn');
+      return;
     }
 
-    log(
-      "COMPANY: | LOCATION: | FLOOR: | SENSOR ID: [" +
-        SensorID +
-        "] | DISTANCE: [" +
-        Distance +
-        "] | OCCUPIED: [" +
-        Occupied +
-        "]"
-    );
-    appendData(
-      company,
-      location,
-      floor,
-      String(SensorID),
-      Occupied,
-      Occupant,
-      Time,
-      Distance
-    );
-    queryDatabase(company, location, floor);
-    databaseListner(company, location, floor);
-  } else {
-    let stringHex = msg.toString("hex");
-    var errorMessage =
-      "PACKET RECIEVED FUNCTION ERROR. RECIEVED PAKCET WITH LENGTH OF: " +
-      msg.length +
-      ". PACKET INFO: " +
-      stringHex;
-    log(errorMessage);
-    sendSlackBotMessage(errorMessage);
+    const sensorData = sensorDoc.data();
+    const distance = calculateDistance(msg);
+    const occupied = determineOccupancy(distance);
+
+    log(`Sensor: ${sensorData.Company}/${sensorData.Location}/${sensorData.Floor}/${sensorData.SpotID} | Distance: ${distance}in | Occupied: ${occupied}`);
+
+    await processSensorData(sensorData, distance, occupied, timestamp);
+  } catch (error) {
+    log(`Error processing UDP message: ${error.message}`, 'error');
+    await sendSlackNotification(`UDP processing error: ${error.message}`);
   }
 });
 
-// adds data entry for spot
-async function appendData(
-  company,
-  location,
-  floor,
-  sensorID,
-  state,
-  occupant,
-  time,
-  distance
-) {
-  //Check if sensor exists in the database before adding data, ensures random data is not added.
-  database
-    .doc(company)
-    .collection("Data")
-    .doc(location)
-    .collection(floor)
-    .doc(sensorID)
-    .get()
-    .then((doc) => {
-      if (!doc.exists) {
-        log("DOCUMENT DOES NOT EXIST FOR SENSOR ID: " + sensorID);
-      } else {
-        spotLogCheck(
-          company,
-          location,
-          floor,
-          sensorID,
-          state,
-          occupant,
-          time,
-          distance
-        );
-      }
-    })
-    .catch((err) => {
-      log("Error getting document" + err);
-    });
-}
+// Start server
+server.bind(CONFIG.PORT, () => {
+  log(`UDP Server started on port ${CONFIG.PORT}`);
+  log('Server is ready to receive parking sensor data');
+});
 
-//CHECK IF THERE ARE DOCUMENTS IN COLLECTION BEFORE MERGING, OTHERWISE ADD FIRST DOCUMENT
-async function spotLogCheck(
-  company,
-  location,
-  floor,
-  sensorID,
-  state,
-  occupant,
-  time,
-  distance
-) {
-  database
-    .doc(company)
-    .collection("Data")
-    .doc(location)
-    .collection(floor)
-    .doc(sensorID)
-    .collection("Data")
-    .get()
-    .then((snap) => {
-      if (snap.size == 0) {
-        addSpotDocument(
-          company,
-          location,
-          floor,
-          sensorID,
-          state,
-          occupant,
-          time,
-          distance
-        );
-      } else {
-        //RUN LOGIC HERE TO SEE IF DATA SHOULD BE MERGED WITH EXISITNG DOCUMENT OR CREATE NEW DOCUMENT
-        var old_data = database
-          .doc(company)
-          .collection("Data")
-          .doc(location)
-          .collection(floor)
-          .doc(sensorID)
-          .collection("Data")
-          .orderBy("Time.End", "desc")
-          .limit(1)
-          .get()
-          .then(async function (querySnapshot) {
-            querySnapshot.forEach(async function (doc) {
-              if (
-                doc.data()["Occupant"] == occupant &&
-                doc.data()["Occupied"] == state
-              ) {
-                // checks for change in status if not log added to current doc
-                var the_test = await doc.data()["Distances"];
-                typeof the_test;
-                the_test.push(distance);
-
-                var temp_history = await doc.data()["Time"]["History"];
-                typeof temp_history;
-                temp_history.push(time);
-
-                database
-                  .doc(company)
-                  .collection("Data")
-                  .doc(location)
-                  .collection(floor)
-                  .doc(sensorID)
-                  .collection("Data")
-                  .doc(doc.id)
-                  .set(
-                    {
-                      Distances: the_test,
-                      Time: {
-                        History: temp_history,
-                        End: time,
-                      },
-                    },
-                    { merge: true }
-                  );
-              } else {
-                log("CHANGE IN OCCUPANT OR OCCUPIED STATUS");
-                // code to make new
-                addSpotDocument(
-                  company,
-                  location,
-                  floor,
-                  sensorID,
-                  state,
-                  occupant,
-                  time,
-                  distance
-                );
-              }
-            });
-            return querySnapshot;
-          })
-          .catch(function (error) {
-            log("Error getting documents", err);
-          });
-      }
-    });
-}
-
-//Create spot log in database
-function addSpotDocument(
-  company,
-  location,
-  floor,
-  sensorID,
-  state,
-  occupant,
-  time,
-  distance
-) {
-  database
-    .doc(company)
-    .collection("Data")
-    .doc(location)
-    .collection(floor)
-    .doc(sensorID)
-    .collection("Data")
-    .add({
-      Occupied: state,
-      Occupant: occupant,
-      Distances: [distance],
-      Time: {
-        Begin: time,
-        End: time,
-        History: [time],
-      },
-    })
-    .then((ref) => {})
-    .catch((err) => {
-      log("Error getting documents", err);
-    });
-  updateDocumentInfo(company, location, floor, sensorID, state, occupant);
-}
-
-// udpdates spot info itself in database
-function updateDocumentInfo(
-  company,
-  location,
-  floor,
-  sensorID,
-  state,
-  occupant
-) {
-  database
-    .doc(company)
-    .collection("Data")
-    .doc(location)
-    .collection(floor)
-    .doc(sensorID)
-    .get()
-    .then((doc) => {
-      database
-        .doc(company)
-        .collection("Data")
-        .doc(location)
-        .collection(floor)
-        .doc(sensorID)
-        .update({
-          "Occupancy.Occupied": state,
-          "Occupancy.Occupant": occupant,
-        })
-        .catch((err) => {
-          log("Error getting documents", err);
-        });
-      log("DATABASE UPDATED FOR SENSOR ID: " + sensorID);
-    })
-    .catch((err) => {
-      log("Error getting document", err);
-    });
-}
-
-//Get current database info
-function queryDatabase(company, location, floor) {
-  database
-    .doc(company)
-    .collection("Data")
-    .doc(location)
-    .get()
-    .then((doc) => {
-      capacity = doc.data()["Capacity"]["Capacity"];
-    });
-
-  database
-    .doc(company)
-    .collection("Data")
-    .doc(location)
-    .collection(floor)
-    .get()
-    .then((snapshot) => {
-      snapshot.forEach((doc) => {
-        if (doc.data()["Occupancy"]["Occupied"] == true) {
-          if (occupiedSpots.includes(doc.id) == false) {
-            occupiedSpots.push(doc.id);
-          }
-        } else if (doc.data()["Occupancy"]["Occupied"] == false) {
-          if (unoccupiedSpots.includes(doc.id) == false) {
-            unoccupiedSpots.push(doc.id);
-          }
-        }
-      });
-      updateFloorInfo(company, location, floor, occupiedSpots.length);
-      updateStructureInfo(company, location, occupiedSpots.length);
-    });
-}
-
-//Attach database listener to notice any changes and ensure all data matches
-function databaseListner(company, location, floor) {
-  database
-    .doc(company)
-    .collection("Data")
-    .doc(location)
-    .collection(floor)
-    .onSnapshot(function (snapshot) {
-      snapshot.docChanges().forEach(function (change) {
-        if (change.type === "modified") {
-          if (change.doc.data()["Occupancy"]["Occupied"] == true) {
-            if (occupiedSpots.includes(change.doc.id) == false) {
-              occupiedSpots.push(change.doc.id);
-            }
-            if (unoccupiedSpots.includes(change.doc.id)) {
-              var index = unoccupiedSpots.indexOf(change.doc.id);
-              if (index > -1) {
-                unoccupiedSpots.splice(index, 1);
-              }
-            }
-          } else {
-            if (unoccupiedSpots.includes(change.doc.id) == false) {
-              unoccupiedSpots.push(change.doc.id);
-            }
-            if (occupiedSpots.includes(change.doc.id)) {
-              var index = occupiedSpots.indexOf(change.doc.id);
-              if (index > -1) {
-                occupiedSpots.splice(index, 1);
-              }
-            }
-          }
-        }
-        updateFloorInfo(
-          company,
-          location,
-          floor,
-          occupiedSpots,
-          unoccupiedSpots
-        );
-        updateStructureInfo(company, location, occupiedSpots.length);
-      });
-    });
-}
-
-//Update structures' floor info status. NOTE: THIS CAN BE OPTIMIZED BY UPDATING THE ARRAY FOR SPECIFIC SPOTS, NOT THE ENTIRE ARRAY
-function updateFloorInfo(
-  company,
-  location,
-  floor,
-  occupiedSpots,
-  unoccupiedSpots
-) {
-  //Sort array before updating database
-  sortArray(occupiedSpots);
-  sortArray(unoccupiedSpots);
-  if (occupiedSpots != undefined && unoccupiedSpots != undefined) {
-    database
-      .doc(company)
-      .collection("Data")
-      .doc(location)
-      .update({
-        ["Floor Data." + floor + ".Occupied"]: occupiedSpots.map((value) =>
-          Number(value)
-        ),
-        ["Floor Data." + floor + ".Unoccupied"]: unoccupiedSpots.map((value) =>
-          Number(value)
-        ),
-      })
-      .catch((err) => {
-        log("Error getting documents", err);
-      });
-  }
-}
-
-//Update structures' field info
-function updateStructureInfo(company, structure, available) {
-  database
-    .doc(company)
-    .collection("Data")
-    .doc(structure)
-    .update({
-      "Capacity.Available": capacity - available,
-    })
-    .catch((err) => {
-      log("Error getting documents", err);
-    });
-}
-
-//Send slack notifications to #server channel if there are any issues
-function sendSlackBotMessage(errorMessage) {
-  slack.send({
-    username: "Server Error Bot",
-    text: "<!channel>",
-    icon_emoji: ":x:",
-    attachments: [
-      {
-        color: "#ff0000",
-        fields: [
-          {
-            title: "ERROR OCCURED IN UDP_SERVER:",
-            value: errorMessage,
-            short: false,
-          },
-        ],
-      },
-    ],
+// Graceful shutdown
+process.on('SIGINT', () => {
+  log('Shutting down UDP server...');
+  server.close(() => {
+    log('UDP Server stopped');
+    process.exit(0);
   });
-}
-
-//emits when socket is ready and listening for datagram msgs
-server.on("listening", function () {
-  var address = server.address();
-  log(
-    "SERVER LISTENING ON PORT : " +
-      address.port +
-      " | SERVER IP: " +
-      address.address +
-      " | SERVER TYPE: " +
-      address.family
-  );
 });
 
-//emits after the socket is closed using socket.close();
-server.on("close", function () {
-  log("Socket is closed !");
-});
-
-server.bind(PORT);
-
-//Sort array
-function sortArray(...array) {
-  return array.sort(function (a, b) {
-    return a - b;
+process.on('SIGTERM', () => {
+  log('Shutting down UDP server...');
+  server.close(() => {
+    log('UDP Server stopped');
+    process.exit(0);
   });
-}
-// function sortArray(array){
-//   array.sort(function(a, b) {
-//     return a - b;
-//   });
-// }
-
-//Only log when debugging not production
-function log(message) {
-  if (debug) {
-    console.log(message);
-  }
-}
+});

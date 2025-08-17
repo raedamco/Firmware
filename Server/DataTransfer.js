@@ -1,297 +1,327 @@
-//
-//  DataTransfer.js
-//  Raedam 
-//
-//  Created on 12/11/2020. Modified on 12/28/2020 by Austin Mckee.
-//  Copyright © 2020 Raedam. All rights reserved.
-//
-// This file holds code for transfering data in the firestore from one document to another and all sub documents
+/**
+ * Data Transfer Utility for Firestore Database Operations
+ *
+ * This module provides utilities for transferring data between different locations
+ * in the Firestore database, including copying documents and collections with
+ * their sub-documents and sub-collections.
+ *
+ * @author Raedam Team
+ * @version 2.0.0
+ * @since 2020
+ */
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+const cron = require('node-cron');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
+const DataHolder = require('./dataHolder.js');
 
-const cron = require('node-cron')
-const admin = require('firebase-admin');
-const dataHold = require("./dataHolder.js");
+// Configuration
+const CONFIG = {
+  DEBUG: true,
+  BATCH_SIZE: 500, // Firestore batch write limit
+};
 
-let serviceAccount = require('./serverKey.json');
-
-const debug = true;
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+// Initialize Firebase Admin SDK
+const serviceAccount = require('./serverKey.json');
+initializeApp({
+  credential: cert(serviceAccount),
 });
 
-let db = admin.firestore();
+const db = getFirestore();
 
-//parent function to move data in firestore database     
-// takes in destination path in database first argument
-// takes in source destination to copy from
-function move_data(dest,src)
-{
-  
-    
-    // check that dest and src match doc type (doc or collection)
-    let root = grab_data(src); // will return object of class dataHolder that acts as root of tree
-    element_grab(root);
-    //copy_data(root,dest)
-}
-// function that takes in source destination
-// function copies desination including all sub-documents and stores in data structure that it returns 
-async function grab_data(src)
-{
-    console.log("Grabing data from: " +src);
-    let doc = false;
-    let collection = false;
-     //determine if src is a doc or collection      
-     if(src.length == 0)
-         {
-             return console.error("no argument for grab data function");
-             
-         }
-     else if (src.length % 2 == 0)
-         {
-             // console.log("doc");
-             doc =true;
-         }
-    else
-        {
-            // console.log("collection");
-            collection = true;
-        }
-     let data_path;
-     // true == collection false == doc
-     for(let i =0; i<src.length; i+=1)
-         {
-             if(i == 0)
-                 {
-                    data_path = db.collection(src[i]);
-                     //console.log("collection");
-                 }
-             else if (i %2 == 0)
-                 {
-                     data_path = data_path.collection(src[i]);
-                     //console.log("collection");
-                 }
-                else{
-                       data_path = data_path.doc(src[i]);
-                       // console.log("doc");
-                     
-                    }             
-         }
-    
-   
-    // create dataHolder object doc
-    if(doc)
-        { 
-           let doc_info = await doc_grab(data_path); // doc_info 0 = data 1= subcollections
-            let root = new dataHold.dataHolder(src[src.length-1],doc_info[0]);
-            //console.log("id: "+ src[src.length-1] + "data: " + doc_info[0]);
-                 // if doc for each/ recursive call
-            let sub_collections = await doc_info[1];
-            
-            for( let i =0; i<sub_collections.length; i+=1)
-                {
-                    let temp =[]; 
-                    src.forEach(level => {
-                        temp.push(level);
-                    })
-                    temp.push(sub_collections[i]);
-                    let sub = await grab_data(temp);
-                    root.subDoc.push(sub);
-                }
-            return root;
-       
-        }
-    
-      // create dataHolder object collection   
-    else 
-        {
-            let collection_info = await collection_grab(data_path);
-             let root = new dataHold.dataHolder(src[src.length-1],null);
-            // if collection for each / recursive call
-            for(let i =0; i<collection_info.length; i+=1) // may need if statement to make sure length > 0
-                {
-                    let temp = [];
-                    src.forEach(level => {
-                        temp.push(level);
-                    }) 
-                    temp.push(collection_info[i]);
-                    let sub = await grab_data(temp);
-                    root.subDoc.push(sub);
-                }
-              return root;
-    
-        }
-  
-    
-   
-    
-    
-}
-async function doc_grab (data_path)
-{
-          // gets data for given doc and stores in doc_info array
-           const doc =  await data_path.get(); 
-           let doc_info = [];
-           let data = doc.data();
-           doc_info.push(data);
-           // grabs all subcollections of given doc and stores in doc_info in collections_ids array
-           const collections = await data_path.listCollections();
-           let collections_ids = [];
-          collections.forEach(collection => {
-             collections_ids.push(collection.id);
-          });
-           doc_info.push(collections_ids);
-           
-          // console.log(doc_info);
-     
-           return doc_info;
-}
-//gets all subdocuments from a collection and returns them as an array 
-async function collection_grab(data_path)
-{
-    
-    const subDocs = []; 
-  let test = data_path.get().then(snapshot => {
-         snapshot.docs.forEach(theDoc =>{
-        let currentID = theDoc.id;
-        subDocs.push(currentID);
-    })       
-        //console.log("pre return : " + subDocs[1]);    
-      return  subDocs;
-    })
-                
-       return await test;
-}
-function copy_data(root,dest)
-{
-    console.log("Dest:" + dest)
-    // create spot to copy root in dest// figure out collection or doc
-     let data_path;
-    let doc = false;
-    let collection = true;
-     // true == collection false == doc
-     for(let i =0; i<dest.length; i+=1)
-         {
-             if(i == 0)
-                 {
-                    data_path = db.collection(dest[i]);
-                      if(i == (dest.length-1))
-                           {
-                               collection = true;
-                           }
-                     //console.log("collection");
-                 }
-             else if (i %2 == 0)
-                 {
-                     data_path = data_path.collection(dest[i]);
-                      if(i == (dest.length-1))
-                           {
-                               collection = true;
-                           }
-                     //console.log("collection");
-                 }
-                else{
-                       data_path = data_path.doc(dest[i]);
-                       if(i == (dest.length-1))
-                           {
-                               doc = true;
-                           }
-                       // console.log("doc");  
-                    }             
-         }
-      
-    
-    // call correct function based of type // roots id not copied not copied subdocs copied
-    if(doc === true)
-        {
-            data_path.set(root.data);
-            // for each sub collection 
-             root.subDoc.forEach(subcollection =>{
-                // console.log(subcollection)
-                 // write sub collection names to doc 
-                 data_path.collection(subcollection.id).doc(subcollection.subDoc[0].id).set(subcollection.subDoc[0].data);
-                 let temp =[]; 
-                    dest.forEach(level => {
-                        temp.push(level);
-                    })
-                 temp.push(subcollection.id);
-                 copy_data(subcollection,temp);
-             })
-            
-            
-            // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
-        }
-    else if (collection === true) 
-    {
-        // will probabaly have to skip subDoc[0] // maybe not
-      
-                for(let i =0; i<root.subDoc.length; i+=1)
-                    {   let temp =[]; 
-                        dest.forEach(level => {
-                            temp.push(level);
-                        })
-                       temp.push(root.subDoc[i].id);
-                       copy_data(root.subDoc[i],temp)
-                    }
-            
-        // for each sub doc 
-        // write sub doc name(id) to collection /// probably dont need acutally
-    
-      // call copy_data(root = subdoc object we just used // dest - dest.push(subdoc key we just wrote))
-        
+/**
+ * Logging utility function
+ * @param {string} message - Message to log
+ * @param {string} level - Log level (info, warn, error)
+ */
+const log = (message, level = 'info') => {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
+
+  if (CONFIG.DEBUG || level === 'error') {
+    console.log(logMessage);
+  }
+};
+
+/**
+ * Main function to move data in Firestore database
+ * @param {string} dest - Destination path in database
+ * @param {string} src - Source path to copy from
+ */
+async function moveData(dest, src) {
+  try {
+    log(`Starting data transfer from ${src} to ${dest}`);
+
+    // Validate input parameters
+    if (!dest || !src) {
+      throw new Error('Destination and source paths are required');
     }
+
+    // Check that dest and src match document type (doc or collection)
+    const root = await grabData(src);
+    if (!root) {
+      throw new Error('Failed to retrieve source data');
+    }
+
+    await copyData(root, dest);
+    log(`Data transfer completed successfully from ${src} to ${dest}`);
+  } catch (error) {
+    log(`Error in moveData: ${error.message}`, 'error');
+    throw error;
+  }
 }
-// child = element_fields parent type_test
-// recursive return "new" type test if another object below 
-// probably used more for copy data
-async function element_grab(root)
-{
-             let fields = Object.keys(root.data);
-         // console.log(fields);
-          //db.collection('data-test-dest').doc('1').set(root.data);
-         if(root.subDoc.length >0)
-             {
-                    let subdoc = await root.subDoc[0];
-       // console.log(subdoc);
-             }
-          root.subDoc.forEach(subcollection =>{
-                 
-                 db.collection("data-test-dest").doc("1").collection(subcollection.id).doc(subcollection.subDoc[0].id).set(subcollection.subDoc[0].data);
-             })
-//          await console.log(doc.data()[temp]);
-//          fields.forEach(function(element){
-//             
-//              let type_test = doc.data()[String(element)];
-//              let the_type = typeof type_test;
-//              //console.log(typeof type_test);
-//              if(the_type === 'object' && the_type !== null)
-//                  {
-//                      let element_fields = Object.keys(type_test);
-//                      let element_data = [];
-//                      let k = 0;
-//                      element_fields.forEach(function(childElement)
-//                         {
-//                            
-//                            element_data.push(type_test[String(childElement)]);
-//                            console.log(childElement + ":" + element_data[k]);
-//                          k+=1;
-//                            // parent elment[this element] = value
-//                          // floor 2 [available ] = 8
-//                         })
-//                  }
-//              console.log(element + ": " + type_test + ":" + the_type);
-//          } )
-//    
+
+/**
+ * Retrieve data from source location including all sub-documents and sub-collections
+ * @param {string[]} src - Source path array
+ * @return {Promise<DataHolder>} Root data holder object
+ */
+async function grabData(src) {
+  try {
+    log(`Grabbing data from: ${src.join('/')}`);
+
+    if (!src || src.length === 0) {
+      throw new Error('No source path provided for grabData function');
+    }
+
+    // Determine if src is a document or collection
+    const isDocument = src.length % 2 === 0;
+    const isCollection = src.length % 2 === 1;
+
+    if (!isDocument && !isCollection) {
+      throw new Error('Invalid source path structure');
+    }
+
+    // Build the data path
+    const dataPath = buildDataPath(src);
+
+    if (isDocument) {
+      const docInfo = await getDocumentData(dataPath);
+      const root = new DataHolder(src[src.length - 1], docInfo.data);
+
+      // Process sub-collections recursively
+      const subCollections = await docInfo.subCollections;
+      for (const subCollection of subCollections) {
+        const subPath = [...src, subCollection];
+        const subData = await grabData(subPath);
+        root.subDoc.push(subData);
+      }
+
+      return root;
+    } else {
+      // Handle collection
+      const collectionInfo = await getCollectionData(dataPath);
+      const root = new DataHolder(src[src.length - 1], collectionInfo.data);
+
+      // Process sub-documents recursively
+      for (const subDoc of collectionInfo.subDocuments) {
+        const subPath = [...src, subDoc];
+        const subData = await grabData(subPath);
+        root.subDoc.push(subData);
+      }
+
+      return root;
+    }
+  } catch (error) {
+    log(`Error in grabData: ${error.message}`, 'error');
+    throw error;
+  }
 }
-//let test =["PSU","Parking Structure 1"]; //db.collection("PSU").doc("Parking Structure 1");
-let test =["PSUData","Parking Structure 1"];
-let test2 =["Companies","Portland State University", "Data","Parking Structure 1","Averages", "Floors"];
-//let test2 = ["PSU"]; //db.collection("PSU");
-async function test_function()
-{
-    let root =await  grab_data(test);
-    copy_data(root,test2);
+
+/**
+ * Build Firestore data path from path array
+ * @param {string[]} pathArray - Array of path segments
+ * @return {Object} Firestore reference
+ */
+function buildDataPath(pathArray) {
+  let dataPath;
+
+  for (let i = 0; i < pathArray.length; i++) {
+    if (i === 0) {
+      dataPath = db.collection(pathArray[i]);
+    } else if (i % 2 === 0) {
+      dataPath = dataPath.collection(pathArray[i]);
+    } else {
+      dataPath = dataPath.doc(pathArray[i]);
+    }
+  }
+
+  return dataPath;
 }
-test_function();
-//grab_data(test2);
+
+/**
+ * Get document data and sub-collections
+ * @param {Object} docRef - Firestore document reference
+ * @return {Promise<Object>} Document data and sub-collections
+ */
+async function getDocumentData(docRef) {
+  try {
+    const doc = await docRef.get();
+    if (!doc.exists) {
+      throw new Error('Document does not exist');
+    }
+
+    const subCollections = await docRef.listCollections();
+    return {
+      data: doc.data(),
+      subCollections: subCollections.map((col) => col.id),
+    };
+  } catch (error) {
+    log(`Error getting document data: ${error.message}`, 'error');
+    throw error;
+  }
+}
+
+/**
+ * Get collection data and sub-documents
+ * @param {Object} colRef - Firestore collection reference
+ * @return {Promise<Object>} Collection data and sub-documents
+ */
+async function getCollectionData(colRef) {
+  try {
+    const snapshot = await colRef.get();
+    const subDocuments = snapshot.docs.map((doc) => doc.id);
+
+    return {
+      data: { size: snapshot.size, empty: snapshot.empty },
+      subDocuments,
+    };
+  } catch (error) {
+    log(`Error getting collection data: ${error.message}`, 'error');
+    throw error;
+  }
+}
+
+/**
+ * Copy data to destination location
+ * @param {DataHolder} root - Root data holder object
+ * @param {string[]} dest - Destination path array
+ */
+async function copyData(root, dest) {
+  try {
+    log(`Copying data to destination: ${dest.join('/')}`);
+
+    if (!root || !dest || dest.length === 0) {
+      throw new Error('Invalid parameters for copyData');
+    }
+
+    // Build destination path
+    const destPath = buildDataPath(dest);
+
+    // Copy root data
+    if (root.data && typeof root.data === 'object') {
+      if (dest.length % 2 === 0) {
+        // Destination is a document
+        await destPath.set(root.data);
+      } else {
+        // Destination is a collection - create a new document
+        await destPath.add(root.data);
+      }
+    }
+
+    // Copy sub-documents recursively
+    for (const subDoc of root.subDoc) {
+      const subDestPath = [...dest, subDoc.id];
+      await copyData(subDoc, subDestPath);
+    }
+
+    log(`Data copied successfully to ${dest.join('/')}`);
+  } catch (error) {
+    log(`Error in copyData: ${error.message}`, 'error');
+    throw error;
+  }
+}
+
+/**
+ * Batch copy data for better performance with large datasets
+ * @param {DataHolder} root - Root data holder object
+ * @param {string[]} dest - Destination path array
+ */
+async function batchCopyData(root, dest) {
+  try {
+    log(`Starting batch copy to destination: ${dest.join('/')}`);
+
+    let batch = db.batch();
+    let operationCount = 0;
+
+    const processBatch = async(dataHolder, path) => {
+      if (operationCount >= CONFIG.BATCH_SIZE) {
+        await batch.commit();
+        batch = db.batch();
+        operationCount = 0;
+      }
+
+      // Add operations to batch
+      const destPath = buildDataPath(path);
+      if (path.length % 2 === 0) {
+        batch.set(destPath, dataHolder.data);
+      } else {
+        batch.add(destPath, dataHolder.data);
+      }
+      operationCount++;
+
+      // Process sub-documents
+      for (const subDoc of dataHolder.subDoc) {
+        const subPath = [...path, subDoc.id];
+        await processBatch(subDoc, subPath);
+      }
+    };
+
+    await processBatch(root, dest);
+
+    // Commit any remaining operations
+    if (operationCount > 0) {
+      await batch.commit();
+    }
+
+    log(`Batch copy completed successfully to ${dest.join('/')}`);
+  } catch (error) {
+    log(`Error in batchCopyData: ${error.message}`, 'error');
+    throw error;
+  }
+}
+
+/**
+ * Validate data integrity after transfer
+ * @param {string[]} src - Source path
+ * @param {string[]} dest - Destination path
+ * @return {Promise<boolean>} True if validation passes
+ */
+async function validateTransfer(src, dest) {
+  try {
+    log(`Validating transfer from ${src.join('/')} to ${dest.join('/')}`);
+
+    const srcData = await grabData(src);
+    const destData = await grabData(dest);
+
+    // Basic validation - check if data exists
+    if (!srcData || !destData) {
+      log('Validation failed: Missing source or destination data', 'error');
+      return false;
+    }
+
+    // Compare data structures
+    const srcKeys = Object.keys(srcData.data || {});
+    const destKeys = Object.keys(destData.data || {});
+
+    if (srcKeys.length !== destKeys.length) {
+      log('Validation failed: Data structure mismatch', 'error');
+      return false;
+    }
+
+    log('Transfer validation completed successfully');
+    return true;
+  } catch (error) {
+    log(`Error in validation: ${error.message}`, 'error');
+    return false;
+  }
+}
+
+// Export functions
+module.exports = {
+  moveData,
+  grabData,
+  copyData,
+  batchCopyData,
+  validateTransfer,
+};
